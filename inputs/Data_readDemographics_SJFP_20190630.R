@@ -1,8 +1,8 @@
-## Loading demographic data of MEPERS as of 06/30/2020 in AV2020
+## Loading demographic data of San Jose Police and fire as of 06/30/2019 in AV2019
 
 
 ## Inputs
-#   - inputs/data_raw/Data_MEPERS_Demographics_20200630.xlsx"
+#   - inputs/data_raw/Data_SJPF_Demographics_20190630.xlsx"
 
 
 ## Outputs
@@ -26,7 +26,7 @@ source("libraries.R")
 #                      ## Global settings ####
 #*******************************************************************************
 dir_dataRaw  <- "inputs/data_raw/"
-fn_dataRaw   <- "Data_MEPERS_Demographics_20200630.xlsx" 
+fn_dataRaw   <- "Data_SJPF_Demographics_20190630.xlsx" 
 filePath_dataRaw <- paste0(dir_dataRaw, fn_dataRaw)
 
 dir_dataOut <- "Inputs/data_proc/"
@@ -195,7 +195,7 @@ agecuts_retirees <- get_agecuts(df_nretirees_raw)
 # Calculate average benefit payments
 
 df_nretirees_raw %<>% 
-  mutate(benefit        = benefit_tot / n_retirees_all,
+  mutate(benefit        = benefit_tot / n_retirees,
         ) %>% 
   mutate(across(!c(AV_date, grp, age.cell, agegrp), na2zero))
 
@@ -223,7 +223,7 @@ save(
   
   agecuts_retirees,
 		 
-	file = paste0(dir_dataOut, "Data_MEPERS_demographics_20200630_raw.RData")
+	file = paste0(dir_dataOut, "Data_SJPF_demographics_20190630_raw.RData")
 )
 
 
