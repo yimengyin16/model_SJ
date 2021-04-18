@@ -1,4 +1,4 @@
-## Loading decrement tables and salary scales from AV2020 of MEPERS
+## Loading decrement tables and salary scales from AV2019 of SJ polic and fire
 
 
 ## Inputs
@@ -25,7 +25,7 @@
 #*******************************************************************************
 
 dir_dataRaw  <- "inputs/data_raw/"
-fn_dataRaw   <- "Data_MEPERS_Decrements_AV2020.xlsx" 
+fn_dataRaw   <- "Data_SJPF_Decrements_AV2019.xlsx" 
 filePath_dataRaw <- paste0(dir_dataRaw, fn_dataRaw)
 
 dir_dataOut <- "Inputs/data_proc/"
@@ -74,15 +74,17 @@ names_sheet <- excel_sheets(filePath_dataRaw)
 
 
 # For MEPERS:
-df_qxr_regular_raw <- 
-  read_excel_range(filePath_dataRaw, "servRet_regular")$df %>% 
-  gather(grp, qxr, -age) %>% 
-  relocate(grp)
+df_qxr_t1_raw <- 
+  read_excel_range(filePath_dataRaw, "servRet_t1")$df  %>% 
+  # gather(yos_range, qxr, - grp,-age)
+  mutate(tier = "t1") %>% 
+  relocate(tier, grp)
 
-df_qxr_special_raw <- 
-  read_excel_range(filePath_dataRaw, "servRet_special")$df %>% 
-  gather(grp, qxr, -yos) %>% 
-  relocate(grp)
+df_qxr_2_raw <- 
+  read_excel_range(filePath_dataRaw, "servRet_t2")$df %>% 
+  mutate(tier = "t2") %>% 
+  relocate(grp) %>% 
+  relocate(tier, grp)
 
 
 
@@ -112,7 +114,7 @@ df_qxd_raw <-
 
 df_qxt_raw <-
     read_excel_range(filePath_dataRaw, "defrRet")$df %>%
-    gather(grp, qxt, -yos) %>%
+    #gather(grp, qxt, -yos) %>%
     relocate(grp)
 
 
@@ -125,15 +127,20 @@ df_qxt_raw <-
 #                      ## Importing mortality  ####
 #*******************************************************************************
 
+# SJPF use Pub10
+
 
 #' Labels in col names:
 #'  - pre: pre-retirement
 #'  - post： post-retirement
 #'  - female/male
 
-df_qxm_raw <-
-    read_excel_range(filePath_dataRaw, "mortality")$df %>% 
-    mutate(across(everything(), na2zero ))
+# df_qxm_raw <-
+#     read_excel_range(filePath_dataRaw, "mortality")$df %>% 
+#     mutate(across(everything(), na2zero ))
+
+
+
 
 
 
@@ -166,7 +173,7 @@ save(
   df_qxr_special_raw,
   df_qxd_raw,
   df_qxt_raw,
-  df_qxm_raw,
+  # df_qxm_raw,
   df_salScale_raw,
   
 	file = paste0(dir_dataOut, "Data_MEPERS_decrements_AV2020_raw.RData")
