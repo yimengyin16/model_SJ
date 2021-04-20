@@ -91,27 +91,34 @@ for (tierName in names(ls_tierData)){
   ls_tierData[[tierName]] <- add_entrantsDist(ls_tierData[[tierName]])
   # ls_tierData$pf.t1$entrants_dist %>% plot # note that SJPF t1 is closed
   
-  # 3. Adjustments to retirement rates
-  ls_tierData[[tierName]] <- adj_retRates(ls_tierData[[tierName]])
+
   
-  
-  # 4. Create a generational decrement table
+  # 3. Create a generational decrement table
   ls_tierData[[tierName]] <- expand_decrements(ls_tierData[[tierName]])
   
   
-  # 5. apply improvements
+  # 4. apply improvements
   # [Done] TODO: to be updated 
   # This step includes calibration of post-retirement mortality
   
-  # N/A for MEPERS 
+  ls_tierData[[tierName]] <- apply_decImprovements(ls_tierData[[tierName]])
   
-  # ls_tierData[[tierName]] <- apply_decImprovements(ls_tierData[[tierName]])
+  # 5. Adjustments to retirement rates
+  ls_tierData[[tierName]] <- adj_retRates(ls_tierData[[tierName]])
   
   
   # 6. Adjustments to initial members
   # This stip includes calibration of benefit payments in year 1
   ls_tierData[[tierName]] <- adj_initMembers(ls_tierData[[tierName]])
 }
+
+
+# ls_tierData$pf.t1$decrements_expanded %>% 
+#   mutate(start_year = year - (age - ea)) %>% 
+#   arrange(start_year,ea)
+# 
+# ls_tierData$pf.t1$decrements <- NULL
+# ls_tierData$pf.t1$decrements_improvement <- NULL
 
 
 

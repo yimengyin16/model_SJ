@@ -255,6 +255,175 @@ add_entrantsDist <- function(tierData,
 
 
 
+#*******************************************************************************
+#           Creating a generational decrement table for the model           ####
+#*******************************************************************************
+
+expand_decrements <- function(tierData,
+                              val_paramlist_    =  val_paramlist,
+                              Global_paramlist_ =  Global_paramlist){
+  
+  # # dev --   
+  # 
+  # tierData          <- ls_tierData[[tierName]]
+  # val_paramlist_    <-  val_paramlist
+  # Global_paramlist_ <-  Global_paramlist
+  # 
+  # # dev -- 
+  
+  assign_parmsList(Global_paramlist_, envir = environment())
+  assign_parmsList(val_paramlist_,    envir = environment())   
+  
+  decrements_tier <- tierData$decrements
+  #decrements_tier
+  
+  # dims of decrement_ter: ea x age
+  # dims of expanded decrement table: year x ea x age
+  
+  # range_start_year <- 1915:(init_year + nyear - 1) 
+  # starting from 1915 is more than enough, just be safe
+  range_year_decrements <- 1915:(init_year + nyear + max_age) 
+  range_start_year <- 1915:(init_year + nyear - 1) 
+  
+  decrements_tier_expanded <- 
+    expand_grid(#year = range_year_decrements,
+                start_year = range_start_year,
+                age  = range_age, 
+                ea   = range_ea) %>% 
+    mutate(yos  = age - ea,
+           year = start_year + yos) %>% 
+    filter(age >= ea
+           # start_year + (max_retAge - 1 - ea) >= 1
+    ) %>% 
+    left_join(decrements_tier, by = c("ea", "age", "yos")) %>%  
+    colwise(na2zero)(.) %>% 
+    relocate(year, ea, age, yos)%>%          
+    arrange(year, ea, age)
+  
+  tierData$decrements_expanded <- decrements_tier_expanded
+  
+  return(tierData)
+  
+}
+
+
+
+#*******************************************************************************
+#                        Apply improvement            ####
+#*******************************************************************************
+# plan specific
+
+
+
+apply_decImprovements <- function(tierData,
+                                  val_paramlist_    =  val_paramlist,
+                                  Global_paramlist_ =  Global_paramlist){
+# 
+  # dev --   
+  
+  tierData          <- ls_tierData[[tierName]]
+  val_paramlist_    <-  val_paramlist
+  Global_paramlist_ <-  Global_paramlist
+
+  # dev -- 
+  
+  assign_parmsList(Global_paramlist_, envir = environment())
+  assign_parmsList(val_paramlist_,    envir = environment())   
+  
+  decrements_expanded    <- tierData$decrements_expanded
+  decrements_improvement <- tierData$decrements_improvement
+  
+  
+  ## range of age the original improvement table covers
+  range_year_imprTab <- range(decrements_improvement$year) 
+  
+  ## expand the improvement table to cover all ages in range_age 
+   # For each age, filling the missing years with the end values in the original tabel
+  decrements_improvement <- 
+    expand_grid(year = decrements_expanded$year %>% unique(),
+                age  = range_age) %>% 
+    left_join(decrements_improvement, by = c("year", "age")) %>% 
+    group_by(age) %>% 
+    mutate(across(
+      !c(year), # should not include the grouping variable
+      ~ifelse(year < range_year_imprTab[1], .x[year == range_year_imprTab[1]], .x )
+    )) %>% 
+    mutate(across(
+      !c(year),
+      ~ifelse(year > range_year_imprTab[2], .x[year == range_year_imprTab[2]], .x )
+    )) %>% 
+    ungroup
+  
+  # decrements_improvement %>% arrange(age, year)
+  
+  
+  ## Merging the improvement table to the expanded decrement table and adjust
+  #  the according decrement rates
+  
+  # decrements_expanded %<>%
+  #   left_join(decrements_improvement, by = c("year", "age")) %>% 
+  #   
+  #   # applying improvements
+  #   mutate(qxm.post_female = qxm.post_female * impr_qxm.post_female,
+  #          qxm.post_male   = qxm.post_male   * impr_qxm.post_male,
+  #          
+  #          qxmd.post.nonocc_female = qxmd.post.nonocc_female * impr_qxmd.post.nonocc_female,
+  #          qxmd.post.nonocc_male   = qxmd.post.nonocc_male   * impr_qxmd.post.nonocc_male,
+  #          
+  #          qxmd.post.occ_female = qxmd.post.occ_female * impr_qxmd.post.occ_female,
+  #          qxmd.post.occ_male   = qxmd.post.occ_male   * impr_qxmd.post.occ_male
+  #          ) 
+  
+  decrements_expanded %<>%
+    left_join(decrements_improvement, by = c("year", "age")) %>% 
+    
+    # applying improvements
+    mutate(qxm.post_female  = qxm.post_female* impr_female,
+           qxm.post_male    = qxm.post_male  * impr_male,
+           
+           # qxm.pre_female   = qxm.pre_female* impr_female,
+           # qxm.pre_male     = qxm.pre_male  * impr_male,
+           
+           qxm.defrRet_female = qxm.defrRet_female* impr_female,
+           qxm.defrRet_male   = qxm.defrRet_male  * impr_male,
+           
+           qxmd.post_female = qxmd.post_female* impr_female,
+           qxmd.post_male   = qxmd.post_male  * impr_male
+           ) %>% 
+    colwise(na2zero)(.) %>% 
+    ungroup
+  
+  
+  # decrements_expanded %>% 
+  #   select(start_year, ea, year, impr_male, impr_female)
+  # 
+  # decrements_expanded$impr_male %>% range()
+  
+  
+  ## construct uni-sex mortality based on adjusted rates
+  share_male   <- tierData$tier_params$share_male
+  share_female <- tierData$tier_params$share_female
+  
+  decrements_expanded %<>% 
+    mutate(
+           qxm.pre   = share_male * qxm.pre_male   + share_female * qxm.pre_female,
+           qxm.post  = share_male * qxm.post_male  + share_female * qxm.post_female,
+           qxmd.post = share_male * qxmd.post_male + share_female * qxmd.post_female,
+           qxm.defrRet  = share_male * qxm.defrRet_male  + share_female * qxm.defrRet_female
+           )
+  
+  
+  ## Calibration
+  decrements_expanded %<>%  
+    mutate(qxm.post = (1 + calib_qxm.post) * qxm.post)
+  
+  tierData$decrements_expanded <- decrements_expanded
+  
+  return(tierData)
+  
+}
+
+
 
 #*******************************************************************************
 #            Modifying retirement rates for the purpose of modeling         ####
@@ -290,215 +459,55 @@ add_entrantsDist <- function(tierData,
 adj_retRates <- function(tierData,
                          val_paramlist_    =  val_paramlist,
                          Global_paramlist_ =  Global_paramlist){
-
-# dev --   
-
-# tierData          <- ls_tierData[[tierName]]
-# val_paramlist_    <-  val_paramlist
-# Global_paramlist_ <-  Global_paramlist
-
-# dev --   
   
-assign_parmsList(Global_paramlist_, envir = environment())
-assign_parmsList(val_paramlist_,    envir = environment())   
-
-decrements_tier <- tierData$decrements
-#decrements_tier %>% head
-
-
-## For now, assume all retirees choose life annuity
-#  - la: life annuity
-#  - ca: Contingent annuity
-
-pct_ca <- 0          # percentage choosing contingent annuity 
-pct_la <- 1 - pct_ca # percentage choosing life annuity
-
-
-decrements_tier %<>% 
-  group_by(ea) %>%  
-  mutate(qxr = ifelse(age == max_retAge - 1,
-                      1 - qxt - qxm.pre - qxd, 
-                      lead(qxr) * (1 - qxt - qxm.pre - qxd)), # Total probability of retirement
-         
-         qxr.la = ifelse(age == max_retAge, 0 , qxr * pct_la),  # Prob of opting for life annuity
-         qxr.ca = ifelse(age == max_retAge, 0 , qxr * pct_ca),  # Prob of opting for contingent annuity
-  )   
-
-tierData$decrements <- decrements_tier
-
-return(tierData)
-
-
-######!!!! need to construct retirement age dependent mortality for life annuitants.
-# For retired(".r"), the only target status is "dead". Note that in practice retirement mortality may differ from the regular mortality.
-#mutate(qxm.la.r   = qxm.r) 
-}
-
-
-
-#*******************************************************************************
-#           Creating a generational decrement table for the model           ####
-#*******************************************************************************
-
-expand_decrements <- function(tierData,
-                              val_paramlist_    =  val_paramlist,
-                              Global_paramlist_ =  Global_paramlist){
-  
-  # # dev --   
-  # 
-  # # tierData          <- ls_tierData[[tierName]]
-  # # val_paramlist_    <-  val_paramlist
-  # # Global_paramlist_ <-  Global_paramlist
-  # 
-  # # dev -- 
-  
-  assign_parmsList(Global_paramlist_, envir = environment())
-  assign_parmsList(val_paramlist_,    envir = environment())   
-  
-  decrements_tier <- tierData$decrements
-  decrements_tier
-  
-  # dims of decrement_ter: ea x age
-  # dims of expanded decrement table: year x ea x age
-  
-  # range_start_year <- 1915:(init_year + nyear - 1) 
-  # starting from 1915 is more than enough, just be safe
-  range_year_decrements <- 1915:(init_year + nyear + max_age) 
-  
-  decrements_tier_expanded <- 
-    expand_grid(year = range_year_decrements,
-                age  = range_age, 
-                ea   = range_ea) %>% 
-    mutate(yos = age - ea) %>% 
-    filter(age >= ea
-           # start_year + (max_retAge - 1 - ea) >= 1
-    ) %>% 
-    left_join(decrements_tier, by = c("ea", "age", "yos")) %>%  
-    colwise(na2zero)(.) %>% 
-    relocate(year, ea, age, yos)%>%          
-    arrange(year, ea, age)
-  
-  tierData$decrements_expanded <- decrements_tier_expanded
-  
-  return(tierData)
-  
-}
-
-
-
-#*******************************************************************************
-#                        Apply improvement            ####
-#*******************************************************************************
-# plan specific
-
-
-
-apply_decImprovements <- function(tierData,
-                                  val_paramlist_    =  val_paramlist,
-                                  Global_paramlist_ =  Global_paramlist){
-# 
   # dev --   
   
   # tierData          <- ls_tierData[[tierName]]
   # val_paramlist_    <-  val_paramlist
   # Global_paramlist_ <-  Global_paramlist
   
-  # dev -- 
+  # dev --   
   
   assign_parmsList(Global_paramlist_, envir = environment())
   assign_parmsList(val_paramlist_,    envir = environment())   
   
-  decrements_expanded    <- tierData$decrements_expanded
-  decrements_improvement <- tierData$decrements_improvement
+  # decrements_tier <- tierData$decrements
+  decrements_expanded <- tierData$decrements_expanded
+  
+  #decrements_tier %>% head
   
   
-  ## range of age the original improvement table covers
-  range_year_imprTab <- range(decrements_improvement$year) 
+  ## For now, assume all retirees choose life annuity
+  #  - la: life annuity
+  #  - ca: Contingent annuity
   
-  ## expand the improvement table to cover all ages in range_age 
-   # For each age, filling the missing years with the end values in the original tabel
-  decrements_improvement <- 
-    expand_grid(year = decrements_expanded$year %>% unique(),
-                age  = range_age) %>% 
-    left_join(decrements_improvement, by = c("year", "age")) %>% 
-    group_by(age) %>% 
-    mutate(across(
-      !c(year), # should not include the grouping variable
-      ~ifelse(year < range_year_imprTab[1], .x[year == range_year_imprTab[1]], .x )
-    )) %>% 
-    mutate(across(
-      !c(year),
-      ~ifelse(year > range_year_imprTab[2], .x[year == range_year_imprTab[2]], .x )
-    )) %>% 
-    ungroup
+  pct_ca <- 0          # percentage choosing contingent annuity 
+  pct_la <- 1 - pct_ca # percentage choosing life annuity
   
   
-  ## Merging the improvement table to the expanded decrement table and adjust
-  #  the according decrement rates
+  decrements_expanded %<>% 
+    mutate(start_year = year - yos) %>% 
+    group_by(start_year, ea) %>%  
+    mutate(qxr = ifelse(age == max_retAge - 1,
+                        1 - qxt - qxm.pre - qxd, 
+                        lead(qxr) * (1 - qxt - qxm.pre - qxd)), # Total probability of retirement
+           
+           qxr.la = ifelse(age == max_retAge, 0 , qxr * pct_la),  # Prob of opting for life annuity
+           qxr.ca = ifelse(age == max_retAge, 0 , qxr * pct_ca),  # Prob of opting for contingent annuity
+    ) %>% 
+    ungroup() %>% 
+    select(-start_year, -yos) 
   
-  # decrements_expanded %<>%
-  #   left_join(decrements_improvement, by = c("year", "age")) %>% 
-  #   
-  #   # applying improvements
-  #   mutate(qxm.post_female = qxm.post_female * impr_qxm.post_female,
-  #          qxm.post_male   = qxm.post_male   * impr_qxm.post_male,
-  #          
-  #          qxmd.post.nonocc_female = qxmd.post.nonocc_female * impr_qxmd.post.nonocc_female,
-  #          qxmd.post.nonocc_male   = qxmd.post.nonocc_male   * impr_qxmd.post.nonocc_male,
-  #          
-  #          qxmd.post.occ_female = qxmd.post.occ_female * impr_qxmd.post.occ_female,
-  #          qxmd.post.occ_male   = qxmd.post.occ_male   * impr_qxmd.post.occ_male
-  #          ) 
-  
-  decrements_expanded %<>%
-    left_join(decrements_improvement, by = c("year", "age", "grp")) %>% 
-    
-    # applying improvements
-    mutate(qxm.post  = qxm.post  * impr_qxm.post,
-           qxmd.post = qxmd.post * impr_qxmd.post) %>% 
-    colwise(na2zero)(.) %>% 
-    ungroup
-  
-  ## update the combined rates.
-  ## Should use the same set of weights when constructing tier 
-  
-  ## TODO: This does not belong to this function, need figure out how to move it to other functions
-   
-  # if(tierData$tier_name == "miscAll"){
-  #   decrements_expanded %<>% 
-  #   mutate(
-  #     qxm.post         = 0.6 * qxm.post_female         + 0.4 * qxm.post_male,
-  #     qxmd.post.nonocc = 0.6 * qxmd.post.nonocc_female + 0.4 * qxmd.post.nonocc_male,
-  #     qxmd.post.occ    = 0.1 * qxmd.post.occ_female    + 0.9 * qxmd.post.occ_male,
-  #     qxmd.post        = 0.8 * qxmd.post.nonocc        + 0.2 * qxmd.post.occ
-  #   ) %>% 
-  #   colwise(na2zero)(.) %>% 
-  #   ungroup
-  # }
-  # 
-  # if(tierData$tier_name == "sftyAll"){
-  #   decrements_expanded %<>% 
-  #     mutate(
-  #       qxm.post         = 0.1 * qxm.post_female         + 0.9 * qxm.post_male,
-  #       qxmd.post.nonocc = 0.1 * qxmd.post.nonocc_female + 0.9 * qxmd.post.nonocc_male,
-  #       qxmd.post.occ    = 0.1 * qxmd.post.occ_female    + 0.9 * qxmd.post.occ_male,
-  #       qxmd.post        = 0.5 * qxmd.post.nonocc        + 0.5 * qxmd.post.occ
-  #     ) %>% 
-  #     colwise(na2zero)(.) %>% 
-  #     ungroup
-  # }
-  # 
-    
-  ## Calibration
-  decrements_expanded %<>%  
-    mutate(qxm.post = (1 + calib_qxm.post) * qxm.post)
   
   tierData$decrements_expanded <- decrements_expanded
   
   return(tierData)
   
+  
+  ######!!!! need to construct retirement age dependent mortality for life annuitants.
+  # For retired(".r"), the only target status is "dead". Note that in practice retirement mortality may differ from the regular mortality.
+  #mutate(qxm.la.r   = qxm.r) 
 }
-
 
 
 

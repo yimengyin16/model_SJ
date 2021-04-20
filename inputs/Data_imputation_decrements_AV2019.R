@@ -179,14 +179,14 @@ df_qxt_imputed <-
 #'  - impute across age 20-70
 
 
-df_qxm.pre_imputed <- 
-  df_qxm_raw %>% 
-  select(age, qxm.pre.male, qxm.pre.female) %>% 
-  gather(Var, value, -age) %>% 
-  relocate(Var, age) %>% 
-  filter(age <=65) %>% 
-  splong("age", fitrange = 20:70) %>% 
-  spread(Var, value)
+# df_qxm.pre_imputed <- 
+#   df_qxm_raw %>% 
+#   select(age, qxm.pre.male, qxm.pre.female) %>% 
+#   gather(Var, value, -age) %>% 
+#   relocate(Var, age) %>% 
+#   filter(age <=65) %>% 
+#   splong("age", fitrange = 20:70) %>% 
+#   spread(Var, value)
 
 
 # df_qxm.pre_imputed %>%
@@ -213,10 +213,10 @@ df_qxm_imputed <-
 left_join(
 ls_pub2010_raw$pubS2010A %>% 
   select(age,
-         qxm.pre_female = qxm.employee.female,
-         qxm.pre_male   = qxm.employee.male,
+         qxm.pre_female   = qxm.employee.female,
+         qxm.pre_male     = qxm.employee.male,
          qxm.post_female  = qxm.healthyRet.female,
-         qxm.post_male  = qxm.healthyRet.male),
+         qxm.post_male    = qxm.healthyRet.male),
 
 ls_pub2010_raw$pubS2010 %>% 
   select(age,
@@ -226,6 +226,20 @@ ls_pub2010_raw$pubS2010 %>%
 by = "age"
 ) %>% 
 filter(age <= 100)
+
+
+df_qxm_imputed %<>% 
+  mutate(
+         qxm.pre_female   = 0.979 * qxm.pre_female,
+         qxm.pre_male     = 0.979 * qxm.pre_male ,
+         qxm.post_female  = 1.002 * qxm.post_female,
+         qxm.post_male    = 1.002 * qxm.post_male,
+         qxmd.post_female = 0.915 * qxmd.post_female,
+         qxmd.post_male   = 0.915 * qxmd.post_male
+         
+         )
+  
+
 
 
 # ls_pub2010_raw$pubS2010 %>% names

@@ -103,7 +103,7 @@ saveRDS(
   file = paste0(dir_dataOut, "pub2010_raw.rds")
 )
 
-save(
+saveRDS(
   MP2019_raw,
   file = paste0(dir_dataOut, "MP2019_raw.rds")
 )
