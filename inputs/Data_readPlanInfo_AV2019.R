@@ -4,7 +4,7 @@
 
 
 ## Inputs
-#   - inputs/data_raw/Data_MEPERS_planInfo_AV2020.xlsx"
+#   - inputs/data_raw/Data_SJPF_planInfo_AV2019.xlsx"
 
 
 ## Outputs
@@ -27,7 +27,7 @@
 #*******************************************************************************
 
 dir_dataRaw  <- "inputs/data_raw/"
-fn_dataRaw   <- "Data_MEPERS_planInfo_AV2020.xlsx" 
+fn_dataRaw   <- "Data_SJPF_planInfo_AV2019.xlsx" 
 filePath_dataRaw <- paste0(dir_dataRaw, fn_dataRaw)
 
 dir_dataOut <- "Inputs/data_proc/"
@@ -66,4 +66,4 @@ init_unrecReturns.unadj <-
 
 save(init_amort_raw,
 		 init_unrecReturns.unadj,
-		 file = paste0(dir_dataOut, "Data_MEPERS_planInfo_AV2020.RData"))
+		 file = paste0(dir_dataOut, "Data_SJPF_planInfo_AV2019.RData"))

@@ -80,7 +80,7 @@ df_qxr_t1_raw <-
   mutate(tier = "t1") %>% 
   relocate(tier, grp)
 
-df_qxr_2_raw <- 
+df_qxr_t2_raw <- 
   read_excel_range(filePath_dataRaw, "servRet_t2")$df %>% 
   mutate(tier = "t2") %>% 
   relocate(grp) %>% 
@@ -159,24 +159,24 @@ df_salScale_raw <-
 #*********************************************************************************************************
 
 
-df_qxr_regular_raw
-df_qxr_special_raw
+df_qxr_t1_raw
+df_qxr_t2_raw
 df_qxd_raw 
 df_qxt_raw
-df_qxm_raw
+#df_qxm_raw
 df_salScale_raw
 
 
 
 save(
-  df_qxr_regular_raw,
-  df_qxr_special_raw,
+  df_qxr_t1_raw,
+  df_qxr_t2_raw,
   df_qxd_raw,
   df_qxt_raw,
   # df_qxm_raw,
   df_salScale_raw,
   
-	file = paste0(dir_dataOut, "Data_MEPERS_decrements_AV2020_raw.RData")
+	file = paste0(dir_dataOut, "Data_SJPF_decrements_AV2019_raw.RData")
 )
 
 

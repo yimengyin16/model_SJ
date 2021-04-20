@@ -1,7 +1,7 @@
 
 
 # Inputs:
-#	 inputs/data_proc/Data_MEPERS_demographics_20200630_raw.RData
+#	 inputs/data_proc/Data_SJPF_demographics_20190630_raw.RData
 #     - df_nactives_raw
 #     - df_nretirees_raw
 #     
@@ -13,10 +13,7 @@
 
 # Outputs:
 #    -  imputed member data in tidy format
-#    - df_n_servRet_fillin
-#    - df_n_disbRet_occ_fillin
-#    - df_n_disbRet_nonocc_fillin
-#    - df_n_beneficiaries_fillin
+
 
 
 
@@ -31,7 +28,7 @@ dir_data  <- "inputs/data_proc/"
 #                      ##  Loading data  ####
 #*******************************************************************************
 
-load(paste0(dir_data, "Data_MEPERS_demographics_20200630_raw.RData"))
+load(paste0(dir_data, "Data_SJPF_demographics_20190630_raw.RData"))
 
 
 
@@ -353,10 +350,11 @@ df_nactives_fillin <-
   map( ~ make_lactives(.x, agecuts_actives, yoscuts_actives) %>% fillin_actives) %>% 
   bind_rows()
 
-df_nactives_fillin %>% 
-	filter(grp == "regular", yos == 0, age <= 24) %>% 
-	pull(nactives) %>% 
-	sum
+
+# df_nactives_fillin %>% 
+# 	filter(grp == "all") %>% 
+# 	pull(nactives) %>% 
+# 	sum
 
 # Examine results
 # actives_fillin_spread <-
@@ -439,16 +437,16 @@ fillin_retirees <- function(df){
 }
 
 
-#	There is only one group of retirees in AV of MEPERS, treat them all as servRets
+#	There is only one group of retirees in AV of SJ PF, treat them all as servRets
 df_nretirees_raw %<>% 
-	rename(n_servRet = n_retirees_all,
+	rename(n_servRet = n_retirees,
 				 benefit_servRet = benefit)
 
 
 
 ## Try using a single group
-lretirees <- filter(df_nretirees_raw, grp == "regular") %>% make_lretirees(agecuts_retirees, "servRet")
-lretirees %>% fillin_retirees()
+#lretirees <- filter(df_nretirees_raw, grp == "regular") %>% make_lretirees(agecuts_retirees, "servRet")
+#lretirees %>% fillin_retirees()
 
 ## Loop through all groups for each type of benefit
 
@@ -460,9 +458,9 @@ df_n_servRet_fillin <-
 
 
 ## check results
-# df_n_servRet_fillin %>% 
-# 	filter(grp == "special") %>% 
-# 	pull(n_servRet) %>% 
+# df_n_servRet_fillin %>%
+# 	filter(grp == "all") %>%
+# 	pull(n_servRet) %>%
 # 	sum
 # 
 # df_n_servRet_fillin %>% 
@@ -470,7 +468,7 @@ df_n_servRet_fillin <-
 # 	pull(benefit_tot) %>% 
 # 	sum
 # 	
-
+#  sum(df_n_servRet_fillin$n_servRet*df_n_servRet_fillin$benefit_servRet )
 
 
 
@@ -480,9 +478,6 @@ df_n_servRet_fillin <-
 
 # df_nactives_fillin
 # df_n_servRet_fillin
-# df_n_disbRet_occ_fillin
-# df_n_disbRet_nonocc_fillin
-# df_n_beneficiaries_fillin
 
 
 save(
@@ -490,17 +485,9 @@ save(
   df_nactives_fillin,
   df_n_servRet_fillin,
 
-	file = paste0(dir_data, "Data_MEPERS_demographics_20200630_fillin.RData")
+	file = paste0(dir_data, "Data_SJPF_demographics_20190630_fillin.RData")
 )
 
-
-## save df_n_servRet_fillin to be used as benefit scale for SDRS
-df_n_servRet_fillin_MEPERS <- df_n_servRet_fillin 
-
-save(
-	df_n_servRet_fillin_MEPERS ,
-	file = paste0(dir_data, "Data_MEPERS_servRet_20200630_fillin.RData")
-)
 
 
 
