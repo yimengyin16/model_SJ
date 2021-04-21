@@ -120,9 +120,6 @@
 
 
 
-## Assumptions, needs to be revisited 
-
-
 #' Shares of police and fire members
 #' Source: AV2019 ep43
 #'  - police: 541 / 1215
@@ -135,7 +132,7 @@ share_police <- 1 - share_fire
 # - No gender ratio provided in AV and CAFR, 
 #   - Assumption: 10% female and 90% male
 share_male <- 0.9
-share_female <- 1 - share_male
+share_female <- 1-share_male
 
 
 ## Assumptions on demographics 
@@ -202,7 +199,6 @@ cola_assumed <- 0.03 # assumed cola rates for valuation
 
 load(paste0(dir_data, "Data_SJPF_decrements_AV2019_imputed.RData"))
 load(paste0(dir_data, "Data_SJPF_demographics_20190630_fillin.RData"))
-df_mp2019_raw <- readRDS(paste0(dir_data, "MP2019_raw.rds"))
 
 # Data loaded:
 
@@ -318,10 +314,7 @@ df_qxm_tier <-
          qxmd.post = share_female * qxmd.post_female + share_male * qxmd.post_male,
          grp = tier_name
          ) %>% 
-  select(grp, age, 
-         qxm.pre, qxm.pre_female, qxm.pre_male,
-         qxm.post, qxm.post_female, qxm.post_male,
-         qxmd.post, qxmd.post_female, qxmd.post_male)
+  select(grp, age, qxm.pre, qxm.post, qxmd.post)
   
 # df_qxr_tier
 # df_qxd_tier
@@ -347,20 +340,17 @@ decrements_tier <-
   left_join(df_qxd_tier,        by = c("grp", "age")) %>%         # disability
 
   select(grp, ea, age, yos, 
-         qxm.pre,   
-         qxm.pre_female,   qxm.pre_male,
-         qxm.post,  qxm.post_female,  qxm.post_male,
-         qxmd.post, qxmd.post_female, qxmd.post_male,
+         qxm.pre, 
+         qxm.post, 
+         qxmd.post, 
          qxt, 
          qxr, 
          qxd, 
-         everything()
-         #-qxm.pre
-         )%>%          
+         everything())%>%          
   arrange(ea, age)  %>%
   colwise(na2zero)(.)
 
-
+# decrements_tier
 
 
 
@@ -419,75 +409,11 @@ decrements_tier  %<>%
 #   filter(ea == 30)
 
 
-#*******************************************************************************
-#   ## Decrements 3.1: explicitly define mortality for terminated members   ####
-#*******************************************************************************
-
-decrements_tier %<>% 
-  mutate(
-         qxm.defrRet        = ifelse(age >= age_vben, qxm.post, qxm.pre),
-         qxm.defrRet_male   = ifelse(age >= age_vben, qxm.post_male,   qxm.pre_male),
-         qxm.defrRet_female = ifelse(age >= age_vben, qxm.post_female, qxm.pre_female))
-
-
-
 
 
 #*******************************************************************************
 #                      ## Decrements 4: Improvement table  ####
 #*******************************************************************************
-
-# Target format:
-#  data frame indexed by year and age. 
-#  each row is the improvement factor to be applied to the value in that year-age cell  
-
-
-
-
-
-# extending to 1900 to 2220
-#  -  assume 0 for year < 1951
-#  -  assume 2035 value for year > 2035
-
-df_mp2019 <- 
-  bind_rows(
-
-  df_mp2019_raw$male %>% 
-  gather(year, fct, -age, -gender) %>% 
-  mutate(year = as.numeric(year),
-         fct = as.numeric(fct)),
-
-  df_mp2019_raw$female %>% 
-    gather(year, fct, -age, -gender) %>% 
-    mutate(year = as.numeric(year),
-           fct = as.numeric(fct))
-)
-
-
-decrements_improvement <- 
-  expand_grid(gender = c("male", "female"), 
-              age    = range_age,
-              year   = 1900:2220) %>% 
-  left_join(df_mp2019,
-            by = c("gender", "age", "year"))  
-  
-
-decrements_improvement %<>% 
-  group_by(gender, age) %>% 
-  mutate(fct = ifelse(year < 1951, 0, fct),
-         fct = ifelse(year > 2035, fct[year ==  2035], fct),
-         ) %>% 
-  mutate(impr = ifelse(year > 2010, lag(cumprod(1 - ifelse(year>=2010,fct,0))), 1),
-         impr = ifelse(year < 2010, lead(order_by(-year,  cumprod(1/(1 - ifelse(year<=2010,fct,0))))), impr)
-  )
-
-
-decrements_improvement %<>% 
-  select(-fct) %>% 
-  spread(gender, impr) %>% 
-  rename(impr_male = male,
-         impr_female = female)
-
 
 
 
@@ -663,9 +589,8 @@ tier_params <-
     age_vben  = age_vben,
     v.year    = v.year,
     fasyears  = fasyears,  # based on policy before PEPRA
-    cola_assumed = cola_assumed,
-    share_male   = share_male,
-    share_female = share_female
+    cola_assumed = cola_assumed
+    
     #bfactor = bfactor
     #EEC_rate = EEC_rate
   )
@@ -678,7 +603,7 @@ assign(paste0("tierData_", tier_name),
            tier_name = tier_name,
            
            decrements = decrements_tier,
-           decrements_improvement = decrements_improvement,
+           #decrements_improvement = decrements_improvement,
            
            df_n_actives = df_n_actives_tier,
            df_n_servRet = df_n_servRet_tier,

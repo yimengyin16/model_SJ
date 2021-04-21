@@ -287,7 +287,10 @@ liab_active %<>%
 		  # as.logical(elig_servRet_full) | as.logical(elig_servRet_early) ~ benReduction,
 			TRUE ~ 0),
 		
-		Bx.servRet.laca  = gx.servRet.laca * Bx # benefit in the first retirement year if retirement age = x
+		Bx.servRet.laca  = gx.servRet.laca * Bx, # benefit in the first retirement year if retirement age = x
+		
+		Bx.servRet.laca = calib_Bx.servRet * Bx.servRet.laca
+		
 		)
 
 # select(liab_active, grp, year,  start_year, ea, age, Bx, sx, yos, fas, benReduction, gx.servRet.laca,  Bx.servRet.laca, pxm_servRet) %>%
@@ -648,6 +651,10 @@ cat("......DONE\n")
 #*******************************************************************************
 cat("Disability Retirement - actives")
 
+
+maxAgeNC_disbRet <- max_retAge
+
+
 # Calculate normal costs and liabilities of retirement benefits with multiple retirement ages
 liab_active %<>% 
   				mutate( 
@@ -659,8 +666,10 @@ liab_active %<>%
   				    TRUE ~ 0
   				  ),
   				
+  				
   				Bx.disbRet = pmin(Bx.disbRet, 0.9 * fas),
-  				 
+  				
+  				Bx.disbRet = calib_Bx.disbRet * Bx.disbRet, 
   				 
   				# Bx.disbRet = Bx.disbRet * adj_fct.act.disbRet, #calibration
   				 
@@ -687,7 +696,7 @@ liab_active %<>%
   				ALx.EAN.CD.disbRet = PVFBx.disbRet - PVFNCx.EAN.CD.disbRet,
 
           # NC and AL of EAN.CP
-          NCx.EAN.CP.disbRet   = ifelse(age < max_retAge, sx * PVFBx.disbRet[age == min(age)]/(sx[age == min(age)] * ayxs[age == max_retAge]), 0),
+          NCx.EAN.CP.disbRet   = ifelse(age < maxAgeNC_disbRet, sx * PVFBx.disbRet[age == min(age)]/(sx[age == min(age)] * ayxs[age == maxAgeNC_disbRet]), 0),
   				PVFNCx.EAN.CP.disbRet = NCx.EAN.CP.disbRet * axRs,
           ALx.EAN.CP.disbRet   = PVFBx.disbRet - PVFNCx.EAN.CP.disbRet
   )
@@ -817,7 +826,7 @@ liab_active %<>%
 	mutate( gx.death  = 1,
 					
 					# Simplifed PERF A basic death benefit policy
-					Bx.death = 3 * sx * gx.death,   # pmax(0, gx.death * sx * 3 - 50000),
+					Bx.death = 4 * sx * gx.death,   # pmax(0, gx.death * sx * 3 - 50000),
 					
 					# Bx.death = Bx.death * adj_fct.act.death, #calibration
 					

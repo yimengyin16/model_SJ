@@ -90,11 +90,27 @@ var_display1 <- c("sim_name", "val_name", "sim", "year",
                   "AL", "FR_MA",  "UAAL", "ERC", "ERC_PR","EEC_PR", "NC",
                   "MA",
                   "AL", 
-                  "AL.active", "AL.nonactive",
+                  "AL.active", 
+                  "AL.active.servRet",
+                  "AL.active.disbRet",
+                  "AL.nonactive",
                   "AL.defrRet",
                   "AL.servRet",
+                  
+                  "NC.servRet_PR",
+                  "NC.disbRet_PR",
+                  "NC.defrRet_PR",
+                  "NC.death_PR",
+                  
+                  "ALa.servRet_PR",
+                  "ALa.disbRet_PR",
+                  "ALa.defrRet_PR",
+                  "ALa.death_PR", 
+                  
+                  
                   "PVFB",
-                  "PVFB.active",
+                  "PVFB.active.disbRet",
+                  "PVFB.active.servRet",
                   "cola_actual",
                   "B",
                   "NC_PR",
@@ -102,6 +118,27 @@ var_display1 <- c("sim_name", "val_name", "sim", "year",
                   "EEC_PR",
                   # "ADC", 
                   "NC", "ERC", "EEC", "SC", "LG", "i.r", "PR",
+                  "n_actives"
+)
+
+
+var_display2 <- c("sim_name", "val_name", "sim", "year", 
+                  "FR_MA",  # "UAAL", "ERC", "ERC_PR","EEC_PR", "NC",
+                  #"MA",
+                  
+                  "NC.servRet_PR",
+                  "NC.disbRet_PR",
+                  "NC.defrRet_PR",
+                  "NC.death_PR",
+                  
+                  "ALa.servRet_PR",
+                  "ALa.disbRet_PR",
+                  "ALa.defrRet_PR",
+                  "ALa.death_PR", 
+                  
+                  "PVFB.active",
+                  "PVFB.nonactive",
+                  #"PVFB.active.servRet",
                   "n_actives"
 )
 
@@ -117,14 +154,28 @@ var_display1 <- c("sim_name", "val_name", "sim", "year",
 # "n.ca.R1", "n.ca.R0S1", "nterms",
 # "ndisb.la", "ndisb.ca.R1", "ndisb.ca.R0S1" )
 
-penSim_results %>% filter(sim == -1)  %>% select(one_of(var_display1))  %>% print
+penSim_results %<>% 
+  mutate(NC.servRet_PR = 100 * NC.servRet/PR,
+         NC.disbRet_PR = 100 * NC.disbRet/PR,
+         NC.defrRet_PR = 100 * NC.defrRet/PR,
+         NC.death_PR   = 100 * NC.death/PR,
+         
+         ALa.servRet_PR = AL.active.servRet/PR,
+         ALa.disbRet_PR = AL.active.disbRet/PR,
+         ALa.defrRet_PR = AL.active.defrRet/PR,
+         ALa.death_PR   = AL.active.death/PR
+         
+         )
+
+
+penSim_results %>% filter(sim == -1)  %>% select(one_of(var_display2))  %>% print
 # penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
 # penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print
 
 print(end_time  - start_time)
 
 
-
+penSim_results$PV
  
 # penSim_results %>% filter(sim == 0, year == max(year)) %>% 
 #   mutate(defr_pct.active = AL.defrRet/AL.active,

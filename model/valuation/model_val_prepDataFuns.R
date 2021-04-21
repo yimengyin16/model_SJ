@@ -412,10 +412,13 @@ apply_decImprovements <- function(tierData,
            qxm.defrRet  = share_male * qxm.defrRet_male  + share_female * qxm.defrRet_female
            )
   
+  #calib_qxm.post  <- -0.2
+  #calib_qxmd.post <- -0.2
   
   ## Calibration
   decrements_expanded %<>%  
-    mutate(qxm.post = (1 + calib_qxm.post) * qxm.post)
+    mutate(qxm.post  = (calib_qxm.post) * qxm.post,
+           qxmd.post = (calib_qxmd.post) * qxmd.post)
   
   tierData$decrements_expanded <- decrements_expanded
   

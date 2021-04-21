@@ -514,7 +514,8 @@ for (j in 1:(nyear - 1)){
   }
   
   ls_NE <- calc_entrants_allTiers(newEnt_byTier_ = newEnt_byTier, 
-                                  delta = val_paramlist_$wf_growth)
+                                  delta = val_paramlist_$wf_growth,
+  																new_entrants)
   
   # ls_NE$miscAll$ne
   

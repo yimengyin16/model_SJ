@@ -121,6 +121,15 @@ for (tierName in names(ls_tierData)){
 # ls_tierData$pf.t1$decrements_improvement <- NULL
 
 
+#*******************************************************************************
+#                            calibration of salary                          ####
+#*******************************************************************************
+tierName <- "pf.t1"
+ls_tierData[[tierName]]$salary_full %<>% 
+  mutate(sx = ifelse( year < 2019, sx * 1.2, sx))
+  
+
+
 
 #*******************************************************************************
 #                            Demographics                                   ####
@@ -138,7 +147,7 @@ pop <- get_demographics(ls_tierData)
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_indivLiab_flexbf.R", local = TRUE)
+source("model/valuation/model_val_indivLiab_flexbf(2).R", local = TRUE)
 
 indivLiab <- list()
 
