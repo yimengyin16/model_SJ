@@ -45,10 +45,18 @@ get_demographics <- function(ls_tierData_,
 	# dev -- 
 	
 ## TODO
-newEnt_byTier <- 1 # c(0, 1) #  for now only allow for new entrants in the second tier. 
-names(newEnt_byTier) <- names(ls_tierData_)  
+
+if ( length(names(ls_tierData_)) == 2){
+ newEnt_byTier <- c(0, 1) #  for now only allow for new entrants in the second tier. 
+ names(newEnt_byTier) <- names(ls_tierData_)  
+}
   
-  
+if ( length(names(ls_tierData_)) == 1){
+	newEnt_byTier <- 1 #  for now only allow for new entrants in the second tier. 
+	names(newEnt_byTier) <- names(ls_tierData_)  
+}
+		
+	
 assign_parmsList(Global_paramlist_, envir = environment()) # environment() returns the local environment of the function.
 assign_parmsList(val_paramlist_, envir = environment())  
 

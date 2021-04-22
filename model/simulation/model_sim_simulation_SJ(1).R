@@ -2,24 +2,7 @@
 
 ## Development log
 {
-## Version log MEPERS(1)
-#  - go through the simulation without MEPERS risk sharing feature
-#  - check consistency. (consistency issue found, to be fixed)
-#  - check unnecessary code from the template, which is based on PERF. 
 
-## Version log MEPERS(2)
-#  - implement shared ADC policy and EEC, ERC caps
-#  - remove unnecessary code found in version (1)
-#  - consistency issue remains
-
-## Version log MEPERS(3)
-#' - first version of contingent COLA, simple approach
-#' - consistency issue resolved
-
-  
-## Version log MEPERS(4)
-#' - EEC as a fixed % of NC
-#' - add parameter cola_default, set to the initial value of penSim$cola_actual
  
 }
 
@@ -60,8 +43,15 @@ run_sim <- function(i.r_ = i.r,
   valData <- readRDS(paste0(dir_val, "val_", sim_paramlist_$val_name, ".rds"))
   # note that "dir_val" is defined outside the function
 
-  tn <- "sumTiers" # name for aggregate values in valData$aggLiab. 
-  tier_names <- names(valData$indivLiab) # names of all component tiers
+  
+  tn <- val_tierName # "sumTiers" # name for aggregate values in valData$aggLiab. 
+  
+  if(tn == "sumTiers"){
+    tier_names <- names(valData$indivLiab) # names of all component tiers
+  } else {
+    tier_names <- tn
+  }
+ 
   
   #*****************************************************************************
   #           Special settings for modeling CalPERS PERF A      ####
@@ -92,8 +82,7 @@ run_sim <- function(i.r_ = i.r,
   for(tierName in tier_names){
   
   # dev --
-    #tierName = "regularAll"
-    
+  #  tierName = tier_names[1]
     
   ls_servRet0[[tierName]] <-
     left_join(
@@ -122,12 +111,9 @@ run_sim <- function(i.r_ = i.r,
     filter(n_sum != 0) %>% 
     mutate(n_sum = NULL)
   
-  ls_servRet0 <- bind_rows(ls_servRet0)
-  
-  
-  
   }
 
+  ls_servRet0 <- bind_rows(ls_servRet0)
   # ls_servRet0$regularAll
     
   
@@ -371,17 +357,17 @@ run_sim <- function(i.r_ = i.r,
   # newBasisPolicyChg <- FALSE
   
   # calibration
-  # valData$init_amort_raw %<>% 
+  # valData$init_amort_raw[[tn]] %<>% 
   #   mutate(year.remaining = year.remaining + 1)
   
   # Set up the matrix for SC starting from year 1
-  m.max     <- max(valData$init_amort_raw$year.remaining, m) # max number of rows and columns needed
+  m.max     <- max(valData$init_amort_raw[[tn]]$year.remaining, m) # max number of rows and columns needed
   m.max     <- max(m.max, 20)  # for amortization of amort. of policy changes
   SC_amort0 <- matrix(0, nyear + m.max, nyear + m.max)
   # SC_amort0
   
   
-  SC_amort.init <- matrix(0, nrow(valData$init_amort_raw), nyear + m.max)
+  SC_amort.init <- matrix(0, nrow(valData$init_amort_raw[[tn]]), nyear + m.max)
   
   
   # Adjustment factor for initial amortization payments 
@@ -411,14 +397,14 @@ run_sim <- function(i.r_ = i.r,
 
    
    if(use_baselineUAAL){
-     factor.initAmort <- UAAL.year1.baseline / sum(valData$init_amort_raw$balance)
+     factor.initAmort <- UAAL.year1.baseline / sum(valData$init_amort_raw[[tn]]$balance)
    } else {
-     factor.initAmort <- UAAL.year1.model    / sum(valData$init_amort_raw$balance)
+     factor.initAmort <- UAAL.year1.model    / sum(valData$init_amort_raw[[tn]]$balance)
    }
    
    # Adjust existing amortization basis
    init_amort <- 
-     valData$init_amort_raw %>% 
+     valData$init_amort_raw[[tn]] %>% 
      mutate(balance = balance * factor.initAmort)
    
 

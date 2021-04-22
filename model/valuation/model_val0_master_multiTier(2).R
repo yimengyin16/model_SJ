@@ -62,7 +62,7 @@ for (tierName in val_paramlist$tier_include){
          readRDS(paste0(dir_tierData, "tierData_", tierName,  ".rds" ))
   }
 
-# ls_tierData$pf.t1
+# ls_tierData$
 
 
 #*******************************************************************************
@@ -118,7 +118,7 @@ for (tierName in names(ls_tierData)){
 #   arrange(start_year,ea)
 # 
 # ls_tierData$pf.t1$decrements <- NULL
-# ls_tierData$pf.t1$decrements_improvement <- NULL
+# ls_tierData$pf.t2$entrants_dist %>% plot
 
 
 #*******************************************************************************
@@ -147,7 +147,7 @@ pop <- get_demographics(ls_tierData)
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_indivLiab_flexbf(2).R", local = TRUE)
+source("model/valuation/model_val_indivLiab_flexbf(3).R", local = TRUE)
 
 indivLiab <- list()
 
@@ -235,28 +235,29 @@ aggLiab$sumTiers <-
 #    plan information associated with this valuation        ####
 #*******************************************************************************
 
-load(filePath_planInfo)  # %>% print
-
-init_amort_include <- character()
-init_amort_include <- c("pf.t1.fire", "pf.t1.police")
-
-# if(any(str_detect(val_paramlist$tier_include, "misc"))){
-#   init_amort_include <- c(init_amort_include, c("misc", "inds"))
-#   }
-# 
-# if(any(str_detect(val_paramlist$tier_include, "sfty"))){
-#   init_amort_include <- c(init_amort_include, c("sfty", "poff", "chp"))
-#   }
-# 
-# if(any(str_detect(val_paramlist$tier_include, "poff"))){
-#    init_amort_include <- c(init_amort_include, c("poff"))    
-#   }
-
-init_amort_raw_val <- 
-  init_amort_raw %>% 
-  filter(grp %in% init_amort_include)
+load(filePath_planInfo)   %>% print
 
 
+init_amort_raw_val <- list()
+
+for (tierName in names(ls_tierData)){
+  # tierName <- names(ls_tierData)[1]
+
+  init_amort_include <- 
+    case_when(
+      tierName %in% "pf.t1" ~  c("pf.t1.fire", "pf.t1.police"),
+      tierName %in% "pf.t2" ~  c("pf.t2.fire", "pf.t2.police")
+      )
+  
+  init_amort_raw_val[[tierName]] <- 
+    init_amort_raw %>% 
+    filter(grp %in% init_amort_include)
+  }
+  
+init_amort_raw_val$sumTiers <- 
+  bind_rows(init_amort_raw_val)
+  
+  
 init_unrecReturns.unadj_val <- init_unrecReturns.unadj # 
 
 

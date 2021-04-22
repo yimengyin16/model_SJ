@@ -47,7 +47,7 @@ val_runList <-
 #                    ### Run valuations   ####                      
 #*******************************************************************************
 
-source("model/valuation/model_val0_master_multiTier(1).R")
+source("model/valuation/model_val0_master_multiTier(2).R")
 
 
 # val_name_run <- val_runList$val_name[1]

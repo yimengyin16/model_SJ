@@ -168,7 +168,7 @@ penSim_results %<>%
          )
 
 
-penSim_results %>% filter(sim == -1)  %>% select(one_of(var_display2))  %>% print
+penSim_results %>% filter(sim == -1)  %>% select(one_of(var_display1))  %>% print
 # penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
 # penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print
 
