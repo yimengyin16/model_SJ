@@ -44,7 +44,7 @@ run_sim <- function(i.r_ = i.r,
  
   
   #*****************************************************************************
-  #           Special settings for modeling CalPERS PERF A      ####
+  #           Special settings for using baseline UAAL      ####
   #***************************************************************************** 
   
   if(use_baselineUAAL|newBasisPolicyChg|use_baselineMA){
@@ -56,7 +56,7 @@ run_sim <- function(i.r_ = i.r,
   if(use_baselineUAAL|newBasisPolicyChg){
     # df_baseline <- readRDS(paste0(dir_outputs, "sim_", sim_name_baseline, ".rds"))$results
     UAAL.year1.baseline <- df_baseline %>% filter(sim == 0, year == init_year) %>% pull(UAAL)
-    AL.year1.baseline <- df_baseline %>% filter(sim == 0, year == init_year) %>% pull(AL)
+    AL.year1.baseline   <- df_baseline %>% filter(sim == 0, year == init_year) %>% pull(AL)
   }
   
   
@@ -505,7 +505,7 @@ run_sim <- function(i.r_ = i.r,
   registerDoParallel(cl)
   
   penSim_results <- foreach(k = -2:nsim, .packages = c("dplyr", "tidyr", "purrr")) %dopar% {
-    # k <- 5
+    # k <- 0
     # initialize
     penSim   <- penSim0
     SC_amort <- SC_amort0
@@ -584,7 +584,7 @@ run_sim <- function(i.r_ = i.r,
       # j <- 2018
       # cola_actual <- 0.01
     
-    if(cola_type == "riskSharing"){  
+    if(useContingentCOLA){  
         
       if(j > 1) {
         
@@ -840,50 +840,41 @@ run_sim <- function(i.r_ = i.r,
     
       
       #******************************************
-      #   __MEPERS COLA                     ####
+      #   __SJ COLA                     ####
       #******************************************
       
-      # MEPERS
-      # Risk-sharing is triggered if ADC rate is greater than EEC cap + ERC cap (9% + 12.5% = 21.5%)
-      # Find the max COLA rate, if applied immediately, that can bring the ADC rate back under the cap. (21.5%)
-      # Note that the such determined COLA rate will be actually applied in the next year and create a gain then. 
       
-      # AA_0_pct <- MA_0_pct <- 0.75
-      #(penSim$SC[j] + penSim$NC[j])/penSim$PR[j]
-      
-      if(cola_type == "riskSharing" & (penSim$SC[j] + penSim$NC[j])/penSim$PR[j] > ERC_cap + EEC_cap){
-      
-      penSim$COLA_triggered[j] <- 1  
-          
-      ## Determine the target level of AL
+      # funded ratio based COLA
+      if(useContingentCOLA){
         
-      # First, determine the required amount of contribution reduction
-      C_reduction <- (penSim$SC[j] + penSim$NC[j]) - (ERC_cap + EEC_cap)* penSim$PR[j]
-      
-      # Second, determine the actuarial gain (amortization basis) needed to create the required
-      #   contribution reduction.
-      #   
-      # For MERERS, this is based on 20-year closed constant percent amortization method.
-      
-      AL_reduction <- gaip_inverse(C_reduction, i, m, g = salgrowth_amort)
-      
-      # check: gaip(AL_reduction, i, n = 20, g = salgrowth_amort)
-      # AL_reduction /penSim$AL[j]
-      
-      # Third, determine the target AL for service retirees
-      AL_servRet_target <- penSim$AL.servRet[j] - AL_reduction
-      
-      
-      # Fourth, determine the benenfit reduction needed to create that AL reduction
-      COLA_target <- (1 + cola_assumed) *  AL_servRet_target / penSim$AL.servRet[j] - 1
-      
-      # check: penSim$AL.servRet[j] / (1+cola_assumed) - penSim$AL.servRet[j]
-      # check: gaip(35474684, i, n = 20, g = salgrowth_amort)/penSim$PR[j]
-      
-      # COLA must be in the range of 0~2.5%
-      
-      penSim$cola_actual[j] <- max(min(cola_max, COLA_target), cola_min)
+        # if(!is.na(use_lowerDR)){
+        #   
+        #   penSim$FR_MA_lowerDR[j] <- with(penSim, MA[j] / (AL[j] * cola_lowerDR_fixedALratio))
+        #   if(penSim$FR_MA_lowerDR[j] >= 0.9999) penSim$cola_actual[j] <- cola_max_FR else penSim$cola_actual[j] <- cola_min_FR # use 99.99 to avoid rounding issue
+        #   
+        # } else {
+          
+        if(penSim$FR_MA[j] >= 0.9999) penSim$cola_actual[j] <- cola_max else penSim$cola_actual[j] <- cola_min # use 99.99 to avoid rounding issue
+          
+        #}
+        
+        
       }
+      
+      
+      # # AA_0_pct <- MA_0_pct <- 0.75
+      # #(penSim$SC[j] + penSim$NC[j])/penSim$PR[j]
+      # 
+      # if(cola_type == "riskSharing" ){
+      # 
+      # penSim$COLA_triggered[j] <- 1  
+      #     
+      # 
+      # 
+      # # COLA must be in the range of 0~2.5%
+      # 
+      # penSim$cola_actual[j] <- max(min(cola_max, COLA_target), cola_min)
+      # }
       
       #******************************************
       #   __Investment income              ####

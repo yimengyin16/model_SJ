@@ -147,7 +147,7 @@ pop <- get_demographics(ls_tierData)
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_indivLiab_flexbf(3).R", local = TRUE)
+source("model/valuation/model_val_indivLiab_flexbf(4).R", local = TRUE)
 
 indivLiab <- list()
 
@@ -253,7 +253,8 @@ for (tierName in names(ls_tierData)){
     init_amort_raw %>% 
     filter(grp %in% init_amort_include)
   }
-  
+
+
 init_amort_raw_val$sumTiers <- 
   bind_rows(init_amort_raw_val)
   

@@ -24,7 +24,7 @@ adj_tierParams <- function(tierData,
                            val_paramlist_    =  val_paramlist,
                            Global_paramlist_ =  Global_paramlist){
   # 
-  # tierData          <-  tierData_miscAll
+  # tierData          <-  ls_tierData[[1]]
   # val_paramlist_    <-  val_paramlist
   # Global_paramlist_ <-  Global_paramlist
   
@@ -32,8 +32,18 @@ adj_tierParams <- function(tierData,
   
   assign_parmsList(val_paramlist_,    envir = environment())
   
-  if(!is.na(val_paramlist_$cola_assumed_override)){
-    tierData$tier_params$cola_assumed <- val_paramlist_$cola_assumed_override
+  
+  if(str_detect(tierData$tier_name, "t1")){
+    if(!is.na(val_paramlist_$cola_assumed_override_t1)){
+      tierData$tier_params$cola_assumed <- val_paramlist_$cola_assumed_override_t1
+    }
+  }
+  
+  
+  if(str_detect(tierData$tier_name, "t2")){
+    if(!is.na(val_paramlist_$cola_assumed_override_t2)){
+      tierData$tier_params$cola_assumed <- val_paramlist_$cola_assumed_override_t2
+    }
   }
   
   return(tierData)

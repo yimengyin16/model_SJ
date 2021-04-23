@@ -1,0 +1,1626 @@
+---
+title: "Modeling WRS: Preliminary results for discussion"
+output:
+  html_notebook:
+    toc: yes
+    number_sections: yes
+  word_document:
+    toc: yes
+  html_document:
+    toc: yes
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+# **Overview of key risk-sharing features**
+
+Key policy features:
+
+1.  **Initial benefit: the maximum of DB-formula and money-purchase calculations upon retirement**
+
+    -   DB formula: 1.6%-1.765% benefit factor (General members); no greater than 70% of final average salary
+
+    -   Money purchase benefit: annuity calculated based on 2 x balance of employee reserve fund (separate balance for each individual; accumulated EECs plus earnings credited to the account)
+
+    -   Notes on employee reserve funds
+
+        -   These funds can be understood as notional cash balance accounts. Using the terminology of cash balance plans:
+
+            -   Interest crediting rate: effective investment returns (5-year smoothed for assets in the Core Fund; market return for assets in the Variable Fund.)
+
+            -   Salary crediting rate: EEC rate, equal to half of ADC rate after the 2011 reform.
+
+        -   As the EEC rate is equal to half of the ADC rate and the annuity amount is calculated based on 2 x employee reserve fund balance, for each participant the annuity is effectively determined by the accumulated amount of (ADC rate x salary) over his/her career plus credited investment earnings.
+
+        -   The money-purchase benefit and ADC have recursive effects on each other, creating a "money-purchase effect" on the valuation results. This is an mechanism **unique** to WRS caused by its current policy combination. See appendix for the description in the 2019 valuation report; We have not found detailed descriptions of how the plan actuary treats the "money purchase effect". See "Notes on modeling 'money-purchase effect'" section below for how it is treated in the model. We plan to talk to WRS about this.
+
+2.  **Post-retirement benefit adjustments**
+
+    -   Benefits can be adjusted upward or downward depending on whether there is a funding surplus or deficit for retirees; benefit cannot fall below the initial level upon retirement.
+
+    -   Rate of adjustment: 100% x (assets - liability) / liability. (Only retirees' portions of assets and liability are used in the calculation). For example, if the retiree liabilities are 105% funded, the adjustment is 5%; if they are 95% funded, the adjustment is -5%, while benefits cannot be reduced below the initial levels.
+
+    -   The adjustments are made only when the effective returns deviate from the assumed rate for retirees (5%) by more than 0.5%.
+
+    -   Because the benefits cannot be reduced below the initial amounts and some retirees are already at the minimum, additional reductions are required for those who are not at the minimum in order to balance the assets and liability for retirees. (Wisconsin Legislative Fiscal Bureau Informational paper 82 (2019), Table 41.) The requirement of additional reductions is NOT incorporated in the model yet.
+
+3.  **ADC evenly split between employer and employees**
+
+    -   Since 2011, the required contribution rates are evenly split between employer and employees (for General Participants and Executive and Elected Officials, who account for the majority of the workforce).
+
+4.  **Variable amortization period**
+
+    -   The Wisconsin Statutes allows the amortization period to be varied upward or downward in order to minimize short-term rate fluctuations.
+
+    -   The standard period is 20 years and is reconsidered every 3 years in the experience study.
+
+    -   Temporary changes can be made if there are large market gains or losses, which are defined as those that can result in a contribution rate change greater than 0.4% over 2 years.
+
+    -   The amortization period can be varied up to 30 years and down to 10 years.
+
+    -   For 2019, a 20-year period is used.
+
+    -   The potential for a variable amortization period is **NOT** incorporated into the model. We used a fixed 20-year period.
+
+
+# **Summary of modeling approach**
+
+## Policy scenarios
+
+We run the simulation under the following three policy scenarios.
+
+For labeling purposes, "variable benefit for actives" denotes the policy that determines benefits based on the max of DB-formula and money-purchase calculations; and "variable benefit for retirees" denotes the policy of post-retirement benefit adjustments.
+
+1.  **Variable benefit for all (WRS)**
+
+-   This is the baseline policy that includes all key policy features of WRS.
+
+-   Benefit upon retirement: max of DB-formula calculation and money-purchase calculation.
+
+-   Post-retirement benefit adjustment for retirees.
+
+    -   Currently the additional benefit reductions for those who are not at the minimum is not implemented in the model. So the current results may underestimate the benefit risk for retirees.
+
+-   Contribution policy:
+
+    -   ADCs are evenly split between employer and employees
+
+    -   ADC rate floor is 0 for both employer and employee.
+
+2.  **Variable benefit for retirees only**
+
+    -   This policy is the same as the baseline policy 1 except that the money-purchase benefits are deterministic and not affected by variability of future contributions and investment returns. (Based on the current simulation results, the money-purchase option becomes less likely to be triggered under this policy.)
+
+    -   The money-purchase benefits are determinitic based on the following assumptions (using cash balance terminology again):
+
+        -   Salary crediting rate: a constant 12% of salary is credited to each worker's account each year, close to the EAN normal cost rate when return assumption (7%) is always met under policy 1.
+
+        -   Interest crediting rate: 7% constant, equal to the return assumption for actives.
+
+    -   Notes: although the benefit accrual for actives is deterministic, the benefits can be more generous than the pure DB benefit if the money-purchase benefit is higher than the pure DB benefit under the deterministic assumptions above. We choose to keep the "max of DB and money purchase" calculation under this policy instead of completely removing the money purchase component in order to make policy 1 and 2 more comparable.
+
+3.  **Variable benefit for actives only**
+
+    -   This policy is the same as the baseline policy 1 except that the post-retirement adjustments are deterministic and not affected by the funding status for retirees. This is essentially a fixed COLA policy.
+
+    -   Post-retirement benefit adjustment: 1.8% constant, which is close to the adjustment under policy 1 when the return assumption (7%) is always met.
+
+4.  **Non-variable benefit for all**
+
+    -   This combines the changes in policies 2 and 3: deterministic money-purchase benefit and deterministic post-retirement benefit adjustments.
+
+Additional variants will be examined in future analysis (e.g. fixed EEC rate rather than 50/50 split of ADC).
+
+## Investment return scenarios
+
+-   7 simulation runs under each policy. The actual return of 15.2% for 2019-2020, assumed return of 7% for 2020-2021, after that:
+
+    -   Deterministic 1: constant return of 7% in every year (assumption met)
+
+    -   Deterministic 2: Asset shock of -24% in 2022, 12% in 2023 and 2024, 7% in all other years.
+
+    -   5 stochastic return series with different 40-year average returns. Generate 2000 series with 7% expected mean return, 12% standard deviation, compute the 40-year average compound return for each and select the 5 series at the 10th, 25th, 50th, 75th, and 90th percentiles.
+
+-   Note that these are the same set of returns used in the analysis of NESERS, except that they are all lowered by 0.5% (except the years of asset shock and recovery) to reflect the lower assumed return (7%) for WRS.
+
+## Model assumptions and Simplifications
+
+-   The Variable Fund is not incorporated. The Variable Fund assets only account for 8.1% of the total actuarial value of assets as of 2019. Adding the Variable Found would increase the variability of benefits, but the impact should be small.
+
+-   The additional benefit reductions for those who are not at the initial benefit level is not implemented in the model. Adding this feature is expected to increase the benefit risk for retirees.
+
+-   Plan provisions and assumptions for General Participants (91.4% of all active members) are applied to all plan members. Other member categories (e.g. protective members) have more generous benefits and higher normal costs.
+
+-   Non-service-retirement benefits (separation, disability, and death) are combined into a lump-sum benefit upon separation. We estimate that these benefits combined account for about 10% \~ 15% total liability. We may want to model the separation benefit explicitly in later versions.
+
+-   Variable amortization period is not implemented. Adding this policy will further stabilize the contribution rate but cause lower recovery of funded ratio after large market downturns.
+
+-   The WRS contribution rate also includes a FIL amortization component to fund the UAALs created before the participating employers joined the system. This component is very small (\<0.3% of total UAAL in 2019) and is not included in the model.
+
+-   Key valuation methods and assumptions in the model:
+
+    -   Discount rate: 7% for active members; 5% for retirees
+
+    -   Cost method: EAN
+
+    -   Asset smoothing: 5 years
+
+    -   Amortization of UAAL: 20-year level percent open amortization
+
+## Notes on modeling "money-purchase effect"
+
+The actuarial valuation of WRS is affected by a "money-purchase effect", which is caused by the recursive interaction between the calculation of ADC and projected based on money purchase calculation (see appendix for the description in the 2019 valuation report of WRS). The effect
+
+1.  Changes in ADC (caused by investment gains/losses, for example), which is evenly shared between employer and employee contributions, will change the projected future participant account balance.
+
+2.  Changes in the projected participant account balance will change the projected benefits, because the benefit is the greater of the DB-formula calculation and the money-purchase calculation.
+
+3.  Changes in projected benefits will affect the current projected actuarial liability and normal cost, and in turn affect ADC rate.
+
+4.  The changes in ADC rate will be split between employer and employee contributions, which takes the process back to step 1 above, starting a new round of the recursive effect.
+
+We did not find any detailed description of how the "money-purchase effect" is treated in the actuarial valuation of WRS, and it is modeled based on our understanding of the plan documents. Below is a brief description of our implementation:
+
+-   **1st round**. At the beginning of each year, update participant account balance using the ADC rate and effective investment return of last year, then project future account balance based on the **projected future ADC rates used in the last year**. Then calculate the AL and (EAN) normal cost for the current year, the projected future normal costs.
+
+-   **2nd round**. Calculate the amortization cost for current and future years based on the AL calculated in the 1st round. Then construct the projected ADC rates by summing up the projected normal cost in the 1st round and the projected amortization cost in the 2nd round. With the updated projected ADC rates, repeat the valuation process the calculate the 2nd valuation of AL and normal costs (current and projected).
+
+-   **3rd round**. Based on the AL and NCs produced in the 2nd round, repeat the calculations in the 2nd round and produce the 3rd round AL and normal costs.
+
+-   This process can go on but we currently choose to stop at round 3 and use it as the final results for the current year (the projected ADC rates will be used in the 1st round of next year). Some experiments show that the changes between iterations are decreasing and the results tend to converge after about 5 iterations. But the speed of convergence may be affected by the size of the investment gains/losses.
+
+## Interaction between the money purchase benefits and the post-retirement benefit adjustments.
+
+-   For investment gains, post-retirement adjustments can make the increases of money purchase benefit larger. Higher-than-expected returns tend to reduce UAAL and the projected future contributions, which will partially offset the benefit gains due to the higher-than-expected increase in participant account balance. With the post-retirement benefit adjustments, the retirees' portion of the investment gain will be given to retirees as dividend, increasing their liabilities, therefore the UAAL and projected future contributions will not be reduced as much and active members will have greater benefit gains.
+-   Similarly, for actuarial losses, post-retirement adjustments can make the decreases of money purchase benefit larger.
+-   In sum, the post-retirement benefit adjustments tend to increase benefits for active members when returns are good and reduce benefits for actives when returns are bad.\
+
+# **Simulation results**
+
+```{r Global_settings, include=FALSE}
+
+## Loading packages
+source(here::here("libraries.R"))
+library(gt)
+
+theme_set(theme_yy())
+
+dir_modelResults <- paste0(here::here(),"/model/simulation/Outputs_sim/")
+dir_outputs      <- paste0(here::here(),"/analysis/outputs_analysis/") 
+
+
+# # Global parameters for analysis
+dr   <- 0.0675 # discount rate
+infl <- 0.0275
+init_year <- 2019
+
+run_base <- "wrs_full"
+
+fig_years <- 2020:2060
+
+colors4 <- c("darkorchid2", "dodgerblue3", "firebrick2", "grey60")
+
+
+```
+
+```{r Loading_results, include = FALSE}
+
+source(here::here("/analysis/analysis_loadingResults.R"))
+# Outputs: 
+   # results_all
+
+df_simNames
+
+# runs_select <- c(
+#     Dev_hybrid_CC  =    "Hybrid; 1% DB factor; \n Cost control",
+# 		Dev_hybrid_noCC=    "Hybrid; 1% DB factor; \n No cost control",
+# 		Dev_DB_noCC    =    "DB; 2% DB factor; \n No cost control"
+# )
+
+runs_select <- df_simNames$label_benPolicy
+names(runs_select) <- df_simNames$simName
+
+
+runs_select_df <- 
+	tibble(
+		sim_name  = names(runs_select),
+		sim_label = runs_select 
+	)
+
+
+results_all %<>% 
+	filter(sim_name %in% names(runs_select)) %>% 
+	mutate(sim_name = factor(sim_name, levels = names(runs_select)))
+
+```
+
+## Summary of investment return scenarios {.tabset}
+
+Heads-up for examining results based on individual simulation runs.
+
+\- While the return series in sim 1 - 5 are chosen based on their 40-year compound annual returns, the timing of the annual returns within these series can also greatly affect some of the measures presented below. Two examples:
+
+-   Although sim 1 has the highest 40-year compound return, the two large losses in the last 10 years create a large UAAL in the final year, which is included in the long-term cost measure "total contribution with terminal UAAL".
+
+-   The greater contribution volatility in sim 3 (median 40-year compound return) is largely caused by a series of low returns right before 2040.
+
+```{r, warning=FALSE, include=FALSE}
+
+
+
+
+df_returnLabel <- 
+	data.frame(sim = c((-1):5),
+						 desc = c(
+	"Asset shock of -24% in 2022",
+	"Constant 7% annual return",
+	"Stochastic return: 90th percentile",
+	"Stochastic return: 75th percentile",
+	"Stochastic return: 50th percentile",
+	"Stochastic return: 25th percentile",
+	"Stochastic return: 10th percentile"
+	)
+	)
+
+df_returnScn <- 
+results_all %>% 
+	filter(year %in% fig_years, sim_name == "wrs_full") %>% 
+	select(sim_name, sim, year, i.r) %>% 
+	group_by(sim_name, sim) %>% 
+	summarise(
+		        geoReturn = get_geoReturn(i.r),
+						sd        = sd(i.r)
+						) %>% 
+	left_join(df_returnLabel, by = "sim" ) %>% 
+	ungroup() %>% 
+	select(sim, desc, geoReturn, sd) %>% 
+	
+	gt %>% 
+	cols_label(sim = "sim #",
+						 desc = "Description",
+						 geoReturn = "Compound annual return",
+						 sd        = "Standard deviation") %>% 
+	fmt_percent(
+		columns = 3:4,
+		# contains("th"),
+		decimals = 1) %>% 
+	tab_header(
+		title = html("Summary of return scenarios"),
+	  subtitle = html('2020-2060')
+	)
+	
+
+span <- 41
+
+fig_returnPath <- 
+results_all %>% 
+	select(sim_name, sim, year, i.r) %>% 
+	filter(sim_name == "wrs_full", year %in% fig_years) %>% 
+	# left_join(runs_select_df, by = "sim_name") %>% 
+	mutate(
+				 sim_name = factor(sim_name, 
+				 									levels = runs_select_df$sim_name,
+				 									labels = runs_select_df$sim_label
+				 									),
+				 sim = paste0("sim ", sim)
+				 ) %>% 
+	filter(year <= init_year + span) %>% 
+	ggplot(aes(x = year, y = i.r)) +  
+	facet_wrap(~sim) + 
+	geom_line() + 
+	geom_point(size = 1) + 
+	scale_y_continuous(breaks = seq(-1, 1, 0.1), label = function(x) percent(x, accuracy = 1) ) + 
+	labs(
+
+				   title = "Investment return scenarios",
+		   x = NULL,
+			 y = "Return")
+# fig_returnPath 
+
+
+```
+
+### Summary table {.unnumbered}
+
+```{r echo=FALSE}
+df_returnScn
+
+```
+
+### Figures of return series {.unnumbered}
+
+```{r echo=FALSE, fig.width= 11, fig.height= 10}
+fig_returnPath
+```
+
+## Analysis of contributions
+
+We recommend reading the "Actuarial liability" section in 3.3 before this section, because the variation in contributions are largely driven by the variation in liabilities.
+
+### Distribution of long-term costs {.tabset}
+
+The values in the first 4 tables below are scaled by the sim 0 (assumption met) value under the "Variable benefit for all (WRS)" policy, which is set to 100. For each policy-sim combination, the values in the PV ERC, PV EEC, and PV UAAL tables add up to the corresponding value in the PV total contribution plus UAAL.
+
+(Click tabs below to show tables)
+
+```{r pvCosts, warning=FALSE, include=FALSE}
+
+
+## PV ERC and EEC 
+get_PVC <- function(df, span, dr){
+
+	# df <- results_all
+	# span = 41
+	
+	# df %>% 
+	# filter(year <= span + init_year) %>% 
+	# select(sim_name, sim, year, ERC, EEC, UAAL, AL) %>% 
+	#  	filter(year == 2050)
+	
+	 
+  df %>% 
+	filter(year <= span + init_year) %>% 
+	select(sim_name, sim, year, ERC, EEC, UAAL, AL, PR) %>% 
+	group_by(sim_name, sim) %>% 
+	mutate(year = year - init_year + 1) %>% 
+	summarise(
+		        sim_name = unique(sim_name),
+						
+		        # PV of payroll
+		        PR_PV         = sum(PR / (1 + dr)^(year - 1)),
+		        
+		        # PV of ERC
+		        ERC_PV         = sum(ERC / (1 + dr)^(year - 1)),
+						ERCwUAAL_PV    = sum(ERC / (1 + dr)^(year - 1)) +  UAAL[year == max(year)] / (1 + unique(dr))^(max(year) - 1),
+						
+						ERC_PR = ERC_PV / PR_PV,
+						ERCwUAAL_PR = ERCwUAAL_PV /PR_PV,
+						
+
+						# PV of EEC
+						EEC_PV         = sum(EEC / (1 + dr)^(year - 1)),
+					  EEC_PR    = EEC_PV / PR_PV,
+						
+						# PV of total contribution plus terminal UAAL
+						CwUAAL_PV         = sum( (ERC+EEC) / (1 + dr)^(year - 1))  +  UAAL[year == max(year)] / (1 + unique(dr))^(max(year) - 1),
+						CwUAAL_PR = CwUAAL_PV / PR_PV,
+						
+						# terminal UAAL
+						UAAL_PV    = UAAL[year == max(year)] / (1 + unique(dr))^(max(year) - 1),
+						CwUAAL_PR = UAAL_PV / PR_PV,
+						
+						
+						# terminal UAAL as terminal AL
+					  UAAL_AL_terminal    = 100 * UAAL[year == max(year)] / AL[year == max(year)],
+						
+						.groups = "drop"
+						)
+}
+
+df_PVC_30y <- get_PVC(results_all, 30, dr = 0.075)
+df_PVC_40y <- get_PVC(results_all, 40, dr = 0.075)
+
+df_PVC_40y
+
+
+# df_PVC_30y %>% 
+# 		filter(sim_name %in% names(runs_select)[1:2], sim == 527) 
+# 
+# 
+# results_all %>% 
+# 	filter(sim == 0,
+# 				 sim_name == "sim_nesers")
+
+
+## Percentiles of PVC for each policy
+get_PVC_qtiles <- function(df_PVC){
+
+# df_PVC_qtiles <- 
+	df_PVC %>% 
+	filter(sim >= 1) %>% 
+	group_by(sim_name) %>% 
+	summarise(sim_name = unique(sim_name),
+						
+						CwUAAL_PV_q99 = quantile(CwUAAL_PV, 0.99, na.rm = TRUE),
+						CwUAAL_PV_q90 = quantile(CwUAAL_PV, 0.90, na.rm = TRUE),
+						CwUAAL_PV_q75 = quantile(CwUAAL_PV, 0.75, na.rm = TRUE),
+						CwUAAL_PV_q50 = quantile(CwUAAL_PV, 0.50, na.rm = TRUE),
+						CwUAAL_PV_q25 = quantile(CwUAAL_PV, 0.25, na.rm = TRUE),
+						CwUAAL_PV_q10 = quantile(CwUAAL_PV, 0.1,  na.rm = TRUE),
+						
+						
+						ERC_PV_q99 = quantile(ERC_PV, 0.99),
+						ERC_PV_q90 = quantile(ERC_PV, 0.90),
+						ERC_PV_q75 = quantile(ERC_PV, 0.75),
+						ERC_PV_q50 = quantile(ERC_PV, 0.50),
+						ERC_PV_q25 = quantile(ERC_PV, 0.25),
+						ERC_PV_q10 = quantile(ERC_PV, 0.1),
+						
+						
+						# UAAL_PV_q995 = quantile(UAAL_PV, 0.989, na.rm = TRUE), # max(UAAL_PV, na.rm = TRUE)
+						UAAL_PV_q90 = quantile(UAAL_PV, 0.90, na.rm = TRUE),
+						UAAL_PV_q75 = quantile(UAAL_PV, 0.75, na.rm = TRUE),
+						UAAL_PV_q50 = quantile(UAAL_PV, 0.50, na.rm = TRUE),
+						UAAL_PV_q25 = quantile(UAAL_PV, 0.25, na.rm = TRUE),
+						UAAL_PV_q10 = quantile(UAAL_PV, 0.1,  na.rm = TRUE),
+						
+						EEC_PV_q99 = quantile(EEC_PV, 0.99),
+						EEC_PV_q90 = quantile(EEC_PV, 0.90),
+						EEC_PV_q75 = quantile(EEC_PV, 0.75),
+						EEC_PV_q50 = quantile(EEC_PV, 0.50),
+						EEC_PV_q25 = quantile(EEC_PV, 0.25),
+						EEC_PV_q10 = quantile(EEC_PV, 0.1),
+						
+						
+						reserve_PV_q90 = quantile(reserve_PV, 0.90, na.rm = TRUE),
+						reserve_PV_q75 = quantile(reserve_PV, 0.75, na.rm = TRUE),
+						reserve_PV_q50 = quantile(reserve_PV, 0.50, na.rm = TRUE),
+						reserve_PV_q25 = quantile(reserve_PV, 0.25, na.rm = TRUE),
+						reserve_PV_q10 = quantile(reserve_PV, 0.1,  na.rm = TRUE),
+						
+						UAALwReserve_PV_q90 = quantile(UAALwReserve_PV, 0.90, na.rm = TRUE),
+						UAALwReserve_PV_q75 = quantile(UAALwReserve_PV, 0.75, na.rm = TRUE),
+						UAALwReserve_PV_q50 = quantile(UAALwReserve_PV, 0.50, na.rm = TRUE),
+						UAALwReserve_PV_q25 = quantile(UAALwReserve_PV, 0.25, na.rm = TRUE),
+						UAALwReserve_PV_q10 = quantile(UAALwReserve_PV, 0.1,  na.rm = TRUE),
+						
+						
+						reserve_AL_q90 = quantile(reserve_AL, 0.90, na.rm = TRUE),
+						reserve_AL_q75 = quantile(reserve_AL, 0.75, na.rm = TRUE),
+						reserve_AL_q50 = quantile(reserve_AL, 0.50, na.rm = TRUE),
+						reserve_AL_q25 = quantile(reserve_AL, 0.25, na.rm = TRUE),
+						reserve_AL_q10 = quantile(reserve_AL, 0.1,  na.rm = TRUE),
+						
+						.groups = "drop"
+						)
+}
+# 
+# df_PVC_qtiles_30y <- get_PVC_qtiles(df_PVC_30y)
+# df_PVC_qtiles_40y <- get_PVC_qtiles(df_PVC_40y)
+
+# ## show results
+#  df_PVC_qtiles_30y %>% 
+#  	select(starts_with("UAAL_PV"))
+
+
+run_base <- "wrs_full"
+
+
+# scale1: all scaled with sim 0 CwUAAL_PV in the base run  
+# scale2: all scaled using PV payroll 
+
+scale_C <- 
+	df_PVC_40y %>% 
+	filter(sim_name == run_base & sim == 0) %>% 
+	pull(CwUAAL_PV)
+
+
+## Table of distribution of PV total contribution with terminal UAAL
+tbl_pvCwUAAL_scale1 <- 
+  df_PVC_40y %>% 
+	select(sim_name, sim, starts_with("CwUAAL_PV")) %>% 
+	rename(value = CwUAAL_PV) %>% 
+	# gather(Var, value, -sim_name, -sim) %>% 
+	mutate(value = 100 * value / scale_C,
+				 sim = paste("sim ", sim)
+				 # Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+				 # Var   = factor(Var) %>% fct_inorder()
+				 ) %>% 
+	spread(sim, value) %>% 
+	left_join(runs_select_df, by = "sim_name") %>% 
+	select(sim_label, everything(), -sim_name) %>% 
+	gt %>% 
+	cols_label(sim_label = "Policy") %>% 
+	fmt_number(
+		columns = 2:8,
+		# contains("th"),
+		decimals = 1) %>% 
+	tab_header(
+		title = html("Distribution of 40-year present value of total contribution plus terminal UAAL")
+	  # subtitle = html('Results are scaled by setting the value of sim 0 under the "NESERS policy" to 100')
+	)
+
+
+# tbl_pvCwUAAL <- 
+#   df_PVC_qtiles_30y %>% 
+# 	select(sim_name, starts_with("CwUAAL_PV")) %>% 
+# 	gather(Var, value, -sim_name) %>% 
+# 	mutate(value = 100 * value / value[sim_name == run_base& str_detect(Var, "q50")],
+# 				 Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+# 				 Var   = factor(Var) %>% fct_inorder()
+# 				 ) %>% 
+# 	spread(Var, value) %>% 
+# 	left_join(runs_select_df, by = "sim_name") %>% 
+# 	select(sim_label, everything(), -sim_name) %>% 
+# 	gt %>% 
+# 	cols_label(sim_label = "Policy") %>% 
+# 	fmt_number(
+# 		contains("th"),
+# 		decimals = 1) %>% 
+# 	tab_header(
+# 		title = html("Distribution of 30-year present value of total contribution plus terminal UAAL")
+# 	)
+
+
+## Table of distribution of PV ERC
+
+tbl_pvERC2 <- 
+  df_PVC_40y %>% 
+	select(sim_name, sim, starts_with("ERC_PV")) %>% 
+	rename(value = ERC_PV) %>% 
+	# gather(Var, value, -sim_name, -sim) %>% 
+	mutate(value = 100 * value / scale_C,
+				 sim = paste("sim ", sim)
+				 # Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+				 # Var   = factor(Var) %>% fct_inorder()
+				 ) %>% 
+	spread(sim, value) %>% 
+	left_join(runs_select_df, by = "sim_name") %>% 
+	select(sim_label, everything(), -sim_name) %>% 
+	gt %>% 
+	cols_label(sim_label = "Policy") %>% 
+	fmt_number(
+		columns = 2:8,
+		# contains("th"),
+		decimals = 1) %>% 
+	tab_header(
+		title = html("Distribution of 40-year present value of ERC")
+	  #subtitle = html('Results are scaled by setting the value of sim 0 under the "NESERS policy" to 100')
+	)
+
+# tbl_pvERC <- 
+#   df_PVC_qtiles_30y %>% 
+# 	select(sim_name, starts_with("ERC_PV")) %>% 
+# 	gather(Var, value, -sim_name) %>% 
+# 	mutate(value = 100 * value / value[sim_name == run_base& str_detect(Var, "q50")],
+# 				 Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+# 				 Var   = factor(Var) %>% fct_inorder()
+# 				 ) %>% 
+# 	spread(Var, value) %>% 
+# 	left_join(runs_select_df, by = "sim_name") %>% 
+# 	select(sim_label, everything(), -sim_name) %>% 
+# 	gt %>% 
+# 	cols_label(sim_label = "Policy") %>% 
+# 	fmt_number(
+# 		contains("th"),
+# 		decimals = 1) %>% 
+# 	tab_header(
+# 		title = html("Distribution of 30-year present value of ERC")
+# 	)
+
+
+## Table of distribution of PV EEC
+tbl_pvEEC2 <- 
+  df_PVC_40y %>% 
+	select(sim_name, sim, starts_with("EEC_PV")) %>% 
+	rename(value = EEC_PV) %>% 
+	# gather(Var, value, -sim_name, -sim) %>% 
+	mutate(value = 100 * value / scale_C,
+				 sim = paste("sim ", sim)
+				 # Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+				 # Var   = factor(Var) %>% fct_inorder()
+				 ) %>% 
+	spread(sim, value) %>% 
+	left_join(runs_select_df, by = "sim_name") %>% 
+	select(sim_label, everything(), -sim_name) %>% 
+	gt %>% 
+	cols_label(sim_label = "Policy") %>% 
+	fmt_number(
+		columns = 2:8,
+		# contains("th"),
+		decimals = 1) %>% 
+	tab_header(
+		title = html("Distribution of 40-year present value of EEC")
+	  #subtitle = html('Results are scaled by setting the value of sim 0 under the "NESERS policy" to 100')
+	)
+
+# tbl_pvEEC <- 
+#   df_PVC_qtiles_30y %>% 
+# 	select(sim_name, starts_with("EEC_PV")) %>% 
+# 	gather(Var, value, -sim_name) %>% 
+# 	mutate(value = 100 * value / value[sim_name == run_base& str_detect(Var, "q50")],
+# 				 Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+# 				 Var   = factor(Var) %>% fct_inorder()
+# 				 ) %>% 
+# 	spread(Var, value) %>% 
+# 	left_join(runs_select_df, by = "sim_name") %>% 
+# 	select(sim_label, everything(), -sim_name) %>% 
+# 	gt %>% 
+# 	cols_label(sim_label = "Policy") %>% 
+# 	fmt_number(
+# 		contains("th"),
+# 		decimals = 1) %>% 
+# 	tab_header(
+# 		title = html("Distribution of 30-year present value of EEC")
+# 	)
+
+
+## Table of distribution of terminal UAAL
+tbl_UAAL_AL_final <- 
+  df_PVC_40y %>% 
+	select(sim_name, sim, starts_with("UAAL_PV")) %>% 
+	rename(value = UAAL_PV) %>% 
+	# gather(Var, value, -sim_name, -sim) %>% 
+	mutate(value = 100 * value / scale_C,
+		     sim = paste("sim ", sim)
+				 # Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+				 # Var   = factor(Var) %>% fct_inorder()
+				 ) %>% 
+	spread(sim, value) %>% 
+	left_join(runs_select_df, by = "sim_name") %>% 
+	select(sim_label, everything(), -sim_name) %>% 
+	gt %>% 
+	cols_label(sim_label = "Policy") %>% 
+	fmt_number(
+		columns = 2:8,
+		# contains("th"),
+		decimals = 1) %>% 
+	tab_header(
+		title = html("UAAL in the terminal year (2060)"),
+	  subtitle = html('negative values indicate surplus')
+	)
+
+
+
+# 
+# tbl_pvUAAL <-   
+#   df_PVC_qtiles_30y %>% 
+# 	select(sim_name, starts_with("UAAL_PV")) %>% 
+# 	gather(Var, value, -sim_name) %>% 
+# 	mutate(
+# 		     #value = 100 * value / value[sim_name == run_base& str_detect(Var, "q50")],
+# 		     value = value/1e6,
+# 				 Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+# 				 Var   = factor(Var) %>% fct_inorder()
+# 				 ) %>% 
+# 	spread(Var, value) %>% 
+# 	left_join(runs_select_df, by = "sim_name") %>% 
+# 	select(sim_label, everything(), -sim_name) %>% 
+# 	gt %>% 
+# 	cols_label(sim_label = "Policy") %>% 
+# 	fmt_number(
+# 		contains("th"),
+# 		decimals = 0) %>% 
+# 	tab_header(
+# 		title = html("Distribution of present value of terminal UAAL (year 30)"),
+# 		subtitle = "$million"
+# 	) %>% 
+# 	tab_source_note(
+# 		source_note = "Note: negative values are surplus"
+# 	)
+
+# x <- 
+# results_all %>% 
+# 	filter(sim_name == "sim_nesers_divCap6", sim == 1)
+
+# tbl_pvCwUAAL
+# tbl_pvERC
+# tbl_pvEEC
+# tbl_pvUAAL
+
+```
+
+#### PV of total contribution with terminal UAAL {.unnumbered}
+
+```{r echo=FALSE}
+#tbl_pvCwUAAL
+tbl_pvCwUAAL_scale1
+
+```
+
+#### PV of employer contribution {.unnumbered}
+
+```{r echo=FALSE}
+#tbl_pvERC
+tbl_pvERC2
+```
+
+#### PV of employee contribution {.unnumbered}
+
+```{r echo=FALSE}
+#tbl_pvEEC
+tbl_pvEEC2
+
+```
+
+#### PV of terminal UAAL {.unnumbered}
+
+```{r echo=FALSE}
+#tbl_pvUAAL
+tbl_UAAL_AL_final
+
+```
+
+### Short-term volatility of costs {.tabset}
+
+```{r prob_ERChike, include=FALSE}
+
+span <- 41
+
+df_C_hike2 <-  
+  results_all %>% 
+	as_tibble() %>% 
+	filter(year <= init_year + span) %>% 
+	mutate(EEC_PR = 100*EEC/PR) %>% 
+	select(sim_name, sim, year, ERC_PR, EEC_PR) %>% 
+	group_by(sim_name, sim) %>% 
+	# mutate(
+	# 	     #ERC_hike = cumany( ERC_PR - lag(ERC_PR, 5, Inf) > 10),
+	# 			 #EEC_hike = cumany( EEC_PR - lag(EEC_PR, 5, Inf) > 5),
+	# 			 ERC_5ymax = (ERC_PR - lag(ERC_PR, 5, Inf)),
+	# 			 EEC_5ymax = (EEC_PR - lag(EEC_PR, 5, Inf)),
+	# 			 
+	# 			 ERC_5ymed = (ERC_PR - lag(ERC_PR, 5, Inf)),
+	# 			 EEC_5ymed = (EEC_PR - lag(EEC_PR, 5, Inf))
+	# 			 
+	# 			 ) %>% 
+
+	summarise(ERC_5ymax = max(ERC_PR - lag(ERC_PR, 5, Inf)),
+				    EEC_5ymax = max(EEC_PR - lag(EEC_PR, 5, Inf)),
+				 
+				    ERC_5ymed = median(ERC_PR - lag(ERC_PR, 5, Inf)),
+				    EEC_5ymed = median(EEC_PR - lag(EEC_PR, 5, Inf)),
+						.groups = "drop")
+
+
+
+
+tbl_ERC_5ymax <- 
+  df_C_hike2  %>% 
+	select(sim_name, sim, starts_with("ERC_5ymax")) %>% 
+	rename(value = ERC_5ymax) %>% 
+	# gather(Var, value, -sim_name, -sim) %>% 
+	mutate(
+		     #value = 100 * value / value[sim_name == run_base & sim == 0],
+				 sim = paste("sim ", sim)
+				 # Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+				 # Var   = factor(Var) %>% fct_inorder()
+				 ) %>% 
+	spread(sim, value) %>% 
+	left_join(runs_select_df, by = "sim_name") %>% 
+	select(sim_label, everything(), -sim_name) %>% 
+	gt %>% 
+	cols_label(sim_label = "Policy") %>% 
+	fmt_number(
+		columns = 2:8,
+		# contains("th"),
+		decimals = 2) %>% 
+	tab_header(
+		title = html("Maximum 5-year increase in ERC rate over 40 years")
+	  # subtitle = html('Results are scaled by setting the value of sim 0 under the "NESERS policy" to 100')
+	)
+
+tbl_ERC_5ymax 
+
+
+
+## Plotting annual ERC rates
+
+
+
+span <- 40
+
+fig_ERC <- 
+results_all %>% 
+	select(sim_name, sim, year, ERC_PR) %>% 
+	left_join(runs_select_df, by = "sim_name") %>% 
+	mutate(ERC_PR = ERC_PR/100,
+				 sim_name = factor(sim_name, 
+				 									levels = runs_select_df$sim_name,
+				 									labels = runs_select_df$sim_label
+				 									),
+				 sim = paste0("sim ", sim)
+				 ) %>% 
+	#filter(year <= init_year + span) %>% 
+	filter(year %in% fig_years) %>% 
+	ggplot(aes(x = year, y = ERC_PR, color = sim_name)) + #, shape = sim_name)) + 
+	facet_wrap(~sim) + 
+	geom_line() + 
+	geom_point(size = 1.2) +
+	coord_cartesian(ylim = c(0, 0.2)) +
+	scale_y_continuous(breaks = seq(0,1, 0.05), label = function(x) scales::percent(x, accuracy = 1) ) + 
+	scale_color_manual(values = colors4) +  
+	scale_shape_manual(values = c(17, 20, 25)) + #, 21)) +
+	labs(
+		   title = "Employer contribution rate under alternative policy and return scenarios",
+		   x = NULL,
+			 y = "ERC as % of payroll",
+			 color = "Policy",
+			 shape = "Policy")
+
+# fig_ERC 
+
+
+
+
+
+# tbl_ERC_5ymed <- 
+#   df_C_hike2  %>% 
+# 	select(sim_name, sim, starts_with("ERC_5ymed")) %>% 
+# 	rename(value = ERC_5ymed) %>% 
+# 	# gather(Var, value, -sim_name, -sim) %>% 
+# 	mutate(
+# 		     #value = 100 * value / value[sim_name == run_base & sim == 0],
+# 				 sim = paste("sim ", sim)
+# 				 # Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+# 				 # Var   = factor(Var) %>% fct_inorder()
+# 				 ) %>% 
+# 	spread(sim, value) %>% 
+# 	left_join(runs_select_df, by = "sim_name") %>% 
+# 	select(sim_label, everything(), -sim_name) %>% 
+# 	gt %>% 
+# 	cols_label(sim_label = "Policy") %>% 
+# 	fmt_number(
+# 		columns = 2:8,
+# 		# contains("th"),
+# 		decimals = 2) %>% 
+# 	tab_header(
+# 		title = html("Median 5-year increase in ERC rate over 30 years")
+# 	  # subtitle = html('Results are scaled by setting the value of sim 0 under the "NESERS policy" to 100')
+# 	)
+# tbl_ERC_5ymed
+
+
+
+
+# df_C_hike <-  
+#   results_all %>% 
+# 	as_tibble() %>% 
+# 	filter(sim >= 1, year <=2050) %>% 
+# 	select(sim_name, sim, year, ERC_PR, EEC_PR) %>% 
+# 	group_by(sim_name, sim) %>% 
+# 	mutate(ERC_hike = cumany( ERC_PR - lag(ERC_PR, 5, Inf) > 10),
+# 				 EEC_hike = cumany( EEC_PR - lag(EEC_PR, 5, Inf) > 5)) %>% 
+# 	group_by(sim_name, year) %>% 
+# 	summarise(ERC_hike = sum(ERC_hike)/n(),
+# 						EEC_hike = sum(EEC_hike)/n(),
+# 						.groups = "drop")
+# 
+# 
+# 
+# 
+# fig_title <- "Probability of ERC rate rising more than 10 percentage points \nwithin 5 years up to the given year"
+# fig_ERC_hike <- 
+# df_C_hike %>% 
+# 	filter(sim_name %in% names(runs_select)) %>% 
+# 	mutate(sim_name = factor(sim_name, levels = runs_select_df$sim_name, labels = runs_select_df$sim_label)) %>% 
+# 	ggplot(aes(x = year, y = ERC_hike, color = sim_name)) +  
+# 	geom_line() +
+# 	geom_point() + 
+# 	scale_color_manual(values = c(brewer_pal(type = "qual", palette = 3 )(7)) ) + 
+# 	scale_y_continuous(labels = function(x) percent(x, accuracy = 1)) +
+# 	scale_x_continuous(breaks = seq(2020, 2100, 5)) +
+# 	labs(title = fig_title,
+# 			 x = "Year",
+# 			 y = "Probability",
+# 			 color = "Policy"
+# 			 ) + 
+# 	guides(color = guide_legend(keywidth = 1.5, keyheight = 2.5)
+# 				 #shape = guide_legend(keywidth = 1.5, keyheight = 2.5)
+# 				 )
+# 
+# 
+# fig_title <- "Probability of EEC rate rising more than 5 percentage points \nwithin 5 years up to the given year"
+# fig_EEC_hike <- 
+# df_C_hike %>% 
+# 	filter(sim_name %in% names(runs_select)) %>% 
+# 	mutate(sim_name = factor(sim_name, levels = runs_select_df$sim_name, labels = runs_select_df$sim_label)) %>% 
+# 	ggplot(aes(x = year, y = EEC_hike, color = sim_name)) +  
+# 	geom_line() +
+# 	geom_point() + 
+# 	scale_color_manual(values = c(brewer_pal(type = "qual", palette = 3 )(7)) ) + 
+# 	scale_y_continuous(labels = function(x) percent(x, accuracy = 1)) +
+# 	scale_x_continuous(breaks = seq(2020, 2100, 5)) +
+# 	labs(title = fig_title,
+# 			 x = "Year",
+# 			 y = "Probability",
+# 			 color = "Policy"
+# 			 ) + 
+# 	guides(color = guide_legend(keywidth = 1.5, keyheight = 2.5)
+# 				 #shape = guide_legend(keywidth = 1.5, keyheight = 2.5)
+# 				 )
+# 
+
+# fig_ERC_hike
+# 
+# fig_EEC_hike
+# 	
+# gridExtra::grid.arrange(fig_ERC_hike, fig_EEC_hike, ncol = 2)
+```
+
+#### Annual ERC rates {.unnumbered}
+
+We have truncated the Y axis at 20% of payroll, to make it easier to compare results.
+
+Note that the contribution rates under the WRS policy are more stable than other policies but are also higher in most years.
+
+```{r echo=FALSE, fig.height=12, fig.width=13}
+fig_ERC
+```
+
+#### Maximum 5-year increase in ERC rate {.unnumbered}
+
+```{r echo=FALSE}
+tbl_ERC_5ymax
+
+# 
+# This graph shows the probability that the ERC rate will rise by more than 10 percentage points within any 5-year period leading up to the current year. For example, in 2035 it shows the probability that the ERC rose by 10 percentage points or more in any prior 5-year period (2020-2024, 2021-2025, ..., 2031-2035). This is designed to show whether the government was likely to face a sharp increase in contribution costs in a short period of time, during the period examined .
+
+```
+
+## Analysis of funded status {.tabset}
+
+```{r FR, include=FALSE}
+
+# Plot the AL and funded ratio under each simulation
+
+span <- 41
+
+
+fig_AL <- 
+results_all %>% 
+	select(sim_name, sim, year, AL, FR_MA) %>% 
+	left_join(runs_select_df, by = "sim_name") %>% 
+	mutate(AL = AL/1e9,
+				 sim_name = factor(sim_name, 
+				 									levels = runs_select_df$sim_name,
+				 									labels = runs_select_df$sim_label
+				 									),
+				 sim = paste0("sim ", sim)
+				 ) %>% 
+	#filter(year <= init_year + span) %>% 
+	filter(year %in% fig_years) %>% 
+	ggplot(aes(x = year, y = AL, color = sim_name)) + 
+	facet_wrap(~sim) + 
+	geom_line() + 
+	geom_point(size = 1) +
+	scale_color_manual(values = colors4) + 
+	labs(
+		   title = "Actuarial liabilities under alternative return and policy scenarios",
+		   x = NULL,
+			 y = "Actuarial liability ($billion)",
+			 color = "Policy")
+
+
+
+fig_FR_MA <- 
+results_all %>% 
+	select(sim_name, sim, year, AL, FR_MA) %>% 
+	left_join(runs_select_df, by = "sim_name") %>% 
+	mutate(AL = AL/1e6,
+				 sim_name = factor(sim_name, 
+				 									levels = runs_select_df$sim_name,
+				 									labels = runs_select_df$sim_label
+				 									),
+				 sim = paste0("sim ", sim)
+				 ) %>% 
+	# filter(year <= init_year + span) %>% 
+	filter(year %in% fig_years) %>% 
+	ggplot(aes(x = year, y = FR_MA, color = sim_name)) + 
+	coord_cartesian(ylim = c(0, 200)) + 
+	scale_y_continuous(breaks = seq(0,1000, 20)) + 
+	scale_color_manual(values = colors4) + 
+	facet_wrap(~sim) + 
+	geom_line() + 
+	geom_point(size = 1) +
+	labs(
+		   title = "Funded ratio (market value based) under alternative return and policy scenarios",
+		   x = NULL,
+			 y = "Funded ratio",
+			 color = "Policy")
+
+
+
+
+
+{
+# 
+# 
+# df_FR <-  
+#   results_all %>% 
+# 	as_tibble() %>% 
+# 	filter(sim >= 1, year <=2050) %>% 
+# 	select(sim_name, sim, year, FR_MA, C, NC, B, PR) %>%
+# 	mutate(CFnet1_PR = (C - B)/PR,
+# 				 CFnet2_PR = (NC - B)/PR
+# 				 ) %>% 
+# 	group_by(sim_name, sim) %>% 
+# 	mutate(FR_lt80_cum   = cumany( FR_MA < 80),
+# 				 FR_lt60_cum   = cumany( FR_MA < 60),
+# 				 FR_lt80_noncum   = ( FR_MA < 80),
+# 				 FR_lt60_noncum   = ( FR_MA < 60),
+# 				 FR_gt100_noncum  = FR_MA >= 99.99,
+# 				 # CFnet_lt5 = 
+#  				 
+# 				 ) %>% 
+# 	group_by(sim_name, year) %>% 
+# 	summarise(FR_lt80_cum  = sum(FR_lt80_cum)/n(),
+# 						FR_lt60_cum  = sum(FR_lt60_cum)/n(),
+# 						FR_lt80_noncum  = sum(FR_lt80_noncum)/n(),
+# 						FR_lt60_noncum  = sum(FR_lt60_noncum)/n(),
+# 						FR_gt100_noncum = sum(FR_gt100_noncum)/n(),
+# 						.groups = "drop")
+# 
+# 
+# 
+# fig_title <- "Probability of funded ratio falling below 80% or 60% \nat least once up to the given year"
+# fig_FRlow_cum <- 
+# df_FR %>% 
+# 	filter(sim_name %in% names(runs_select)) %>% 
+# 	mutate(sim_name = factor(sim_name, levels = runs_select_df$sim_name, labels = runs_select_df$sim_label)) %>% 
+# 	select(sim_name, year, FR_lt80_cum, FR_lt60_cum) %>% 
+# 	gather(Var, value, -sim_name, -year) %>% 
+# 	mutate(Var = factor(Var, 
+# 											levels = c("FR_lt80_cum", "FR_lt60_cum"),
+# 											labels = c("Funded ratio < 80%", "Funded ratio < 60%" )
+# 											)) %>% 
+# 	ggplot(aes(x = year, y = value, color = sim_name)) + 
+# 	facet_grid(.~Var) +
+# 	geom_line() +
+# 	geom_point() + 
+# 	scale_color_manual(values = c(brewer_pal(type = "qual", palette = 3 )(7)) ) + 
+# 	scale_y_continuous(labels = function(x) percent(x, accuracy = 1)) +
+# 	scale_x_continuous(breaks = seq(2020, 2100, 5)) +
+# 	labs(title = fig_title,
+# 			 x = "Year",
+# 			 y = "Probability",
+# 			 color = "Policy"
+# 			 ) + 
+# 	guides(color = guide_legend(keywidth = 1.5, keyheight = 2.5)
+# 				 #shape = guide_legend(keywidth = 1.5, keyheight = 2.5)
+# 				 )
+# 
+# #fig_FRlow_cum 
+# 
+# 
+# fig_title <- "Probability of funded ratio below 80% or 60% in the given year"
+# fig_FRlow_noncum <- 
+# df_FR %>% 
+# 	filter(sim_name %in% names(runs_select)) %>% 
+# 	mutate(sim_name = factor(sim_name, levels = runs_select_df$sim_name, labels = runs_select_df$sim_label)) %>% 
+# 	select(sim_name, year, FR_lt80_noncum, FR_lt60_noncum) %>% 
+# 	gather(Var, value, -sim_name, -year) %>% 
+# 	mutate(Var = factor(Var, 
+# 											levels = c("FR_lt80_noncum", "FR_lt60_noncum"),
+# 											labels = c("Funded ratio < 80%", "Funded ratio < 60%" )
+# 											)) %>% 
+# 	ggplot(aes(x = year, y = value, color = sim_name)) + 
+# 	facet_grid(.~Var) +
+# 	geom_line() +
+# 	geom_point() + 
+# 	scale_color_manual(values = c(brewer_pal(type = "qual", palette = 3 )(7))) + 
+# 	scale_y_continuous(labels = function(x) percent(x, accuracy = 1)) +
+# 	scale_x_continuous(breaks = seq(2020, 2100, 5)) +
+# 	labs(title = fig_title,
+# 			 x = "Year",
+# 			 y = "Probability",
+# 			 color = "Policy"
+# 			 ) + 
+# 	guides(color = guide_legend(keywidth = 1.5, keyheight = 2.5)
+# 				 #shape = guide_legend(keywidth = 1.5, keyheight = 2.5)
+# 				 )
+# 
+# #fig_FRlow_noncum 
+# 
+# 
+# fig_title <- "Probability of funded ratio above 100% in the given year"
+# fig_FR_full<- 
+# df_FR %>% 
+# 	filter(sim_name %in% names(runs_select)) %>% 
+# 	mutate(sim_name = factor(sim_name, levels = runs_select_df$sim_name, labels = runs_select_df$sim_label)) %>% 
+# 	select(sim_name, year, FR_gt100_noncum) %>% 
+# 	gather(Var, value, -sim_name, -year) %>% 
+# 	# mutate(Var = factor(Var, 
+# 	# 										levels = c("FR_lt80_noncum", "FR_lt60_noncum"),
+# 	# 										labels = c("Funded ratio < 80%", "Funded ratio < 60%" )
+# 	# 										)) %>% 
+# 	ggplot(aes(x = year, y = value, color = sim_name)) + 
+# 	# facet_grid(.~Var) +
+# 	geom_line() +
+# 	geom_point() + 
+# 	scale_color_manual(values = c(brewer_pal(type = "qual", palette = 3 )(7)) ) + 
+# 	scale_y_continuous(breaks = seq(0, 1, 0.1), labels = function(x) percent(x, accuracy = 1)) +
+# 	scale_x_continuous(breaks = seq(2020, 2100, 5)) +
+# 	labs(title = fig_title,
+# 			 x = "Year",
+# 			 y = "Probability",
+# 			 color = "Policy"
+# 			 ) + 
+# 	guides(color = guide_legend(keywidth = 1.5, keyheight = 2.5)
+# 				 #shape = guide_legend(keywidth = 1.5, keyheight = 2.5)
+# 				 )
+# 
+# #fig_FR_full
+# 
+# 
+}
+
+# fig_ERC_hike
+
+# fig_EEC_hike
+	
+# gridExtra::grid.arrange(fig_ERC_hike, fig_EEC_hike, ncol = 2)
+```
+
+### Actuarial liability {.unnumbered}
+
+Note that the liabilities under the WRS policy (purple) generally much greater than those under the "Non-variable benefit for all" policy in all investment return scenarios. We are still trying to better understand this, currently we see two reasons, both related to the money purchase benefit:
+
+-   When returns are good, current individual account balances are bumped up, and its impact on projected future balance outweighs the impact of lower future amortization costs. And the impact is further amplified by the recursive "money purchase effect". When returns are bad, current individual account balances are reduced, but its impact on projected future balance is outweighed by the impact of higher future amortization costs. Why do the relative magnitudes of the impact of the changes in the current balance and the impact of future amortization costs differ in different return scenarios? We will investigate.
+
+-   The interaction between the money purchase benefits and the post-retirement benefit adjustment further amplifies the benefit increase when returns are good. (see the "summary of modeling approach" section) Interestingly, we see this (purple above red) not only in scenarios with good returns (sim 1, and 2), but also in scenarios with lower returns (3 and 4). In theory, the interaction should reduce the benefit when returns are bad (purple below red), but only see this in the asset shock scenario (sim -1) and the scenario with the lowest random returns (sim 5).
+
+Question: Will WRS allow the large money purchase effect to happen?
+
+```{r echo=FALSE, fig.width= 11, fig.height= 10}
+#fig_FRlow_noncum
+fig_AL
+```
+
+### Funded ratio (market value based) {.unnumbered}
+
+Note the lower funded ratio under the WRS policy in sim 1 (good returns): investment gains are granted to plan members through money purchase benefits and post-retirement benefit adjustments.
+
+```{r echo=FALSE, fig.width= 11, fig.height= 10}
+#fig_FRlow_cum
+fig_FR_MA
+```
+
+## Analysis of member benefit
+
+In this section:
+
+-   The replacement rate is defined as the retirement benefit as a proportion of [final average salary]. For example, if the [final average salary] is \$100,000 and the benefit at retirement is \$75,000,
+    then the replacement rate in the first retirement year is 0.75.
+
+-   The present value of benefit is defined so that the value for a new retiree in 2020, under current policy, in sim 0 (assumptions met), is 100. All other values are indexed to this, allowing
+    comparisons across sims, cohorts, and policies.
+
+```{r benefit_prep, include = FALSE}
+
+df_indivAct <- 
+results_indivAct %>% 
+	filter(start_year == 2020, ea == 25, age == 60) %>% 
+	select(sim_name, sim, year, pvb.r_servRet_max, ax.servRet, sx) %>% 
+	mutate(benefit = pvb.r_servRet_max / ax.servRet,
+				 replacement = benefit/sx) %>% 
+	# rename(value = benefit) %>% 
+	mutate(
+		     #value = value/1e3,
+				 benefit_std = 100 * benefit / benefit[sim_name == run_base & sim == 0],
+				 sim_name = factor(sim_name, 
+				 									levels = runs_select_df$sim_name,
+				 									labels = runs_select_df$sim_label
+				 									),
+				 sim = paste0("sim ", sim)
+				 )  
+
+
+
+
+# 
+# df_cb60 <- 
+# results_indivAct %>% 
+# 	ungroup() %>% 
+# 	filter(ea == 25, age == 64) %>% 
+# 	select(sim_name, sim, cb_balance) %>% 
+# 	rename(value = cb_balance) %>% 
+# 	mutate(
+# 		     value = value/1e3,
+# 				 value = 100 * value / value[sim_name == run_base & sim == 0],
+# 				 sim_name = factor(sim_name, 
+# 				 									levels = runs_select_df$sim_name,
+# 				 									labels = runs_select_df$sim_label
+# 				 									),
+# 				 sim = paste0("sim ", sim)
+# 				 )  
+	
+tbl_active65 <- 
+  df_indivAct %>% 
+	ungroup() %>% 
+	select(sim_name, sim, value = replacement) %>% 
+	mutate(value = 100*value) %>% 
+	spread(sim, value) %>% 
+	# left_join(runs_select_df, by = "sim_name") %>% 
+	select(sim_name, everything()) %>% 
+	gt %>% 
+	cols_label(sim_name = "Policy") %>% 
+	fmt_number(
+		columns = 2:8,
+		# contains("th"),
+		decimals = 0) %>% 
+	tab_header(
+		title = html("Replacement rate upon retirement at age 60 (with entry age of 25) in 2060"),
+	  subtitle = html('% of salary at age 60')
+	)
+
+# tbl_cb60
+
+# 113739/(1+infl)^40
+
+
+## Present value of benefit
+
+# Cohort to look 
+
+
+
+df_temp <- readRDS(paste0(here::here(),"/model/simVal/outputs_prep/val_prep_Dev.rds"))$ls_tierData$wrs$salary_full
+
+df_temp 
+
+df_Ret60 <- 
+results_indivRet %>% 
+	mutate(age_servRet = ea + year_servRet - start_year) %>% 
+	filter(year_servRet == 2020, age_servRet == 60, ea == 25, age >= 60) %>% 
+	select(sim_name,sim, ea, start_year, year_servRet, ea, age, year,  B_servRet, B_servRet_min) %>% 
+	left_join(df_temp, by = c("start_year", "ea", "age", "year")) %>% 
+	group_by(sim_name, sim ) %>% 
+	mutate(sal_start = sx[age==min(age)],
+				 B_real = B_servRet/(1 + infl)^(age - min(age)),
+				 replacement_real = B_real / sal_start) 
+	
+
+df_Ret60_pv <- 
+	df_Ret60 %>% 
+	group_by(sim_name, sim) %>% 
+	summarise(B_PV = sum(B_servRet / (1+dr)^(age - min(age)))) 
+
+
+tbl_Ret60_pv <- 
+  df_Ret60_pv %>% 
+	ungroup() %>% 
+	# left_join(runs_select_df) %>% 
+	#select(-sim_name) %>% 
+	mutate(
+		     B_PV = 100 * B_PV / B_PV[sim == 0 & sim_name == run_base],
+		     sim = paste0("sim ", sim),
+				 sim_name = factor(sim_name, 
+				 									levels = runs_select_df$sim_name,
+				 									labels = runs_select_df$sim_label)
+				 ) %>% 
+	spread(sim, B_PV) %>% 
+	gt %>% 
+  cols_label(sim_name = "Policy") %>% 
+	fmt_number(
+		contains("sim "),
+		decimals = 1) %>%
+	tab_header(
+		title = html("40-year present value of benefit"),
+		subtitle = "For members who retire at age 60 with 35 years of service in 2020"
+	)
+
+
+span <- 41
+
+fig_replacement <- 
+df_Ret60 %>%  
+  mutate() %>% 
+	mutate(
+		     value = replacement_real,
+		     sim = paste0("sim ", sim),
+				 sim_name = factor(sim_name, 
+				 									levels = runs_select_df$sim_name,
+				 									labels = runs_select_df$sim_label)
+				 ) %>% 
+	filter(year <= init_year + span) %>% 
+	ggplot(aes(x = year, y = value, color = sim_name)) + 
+	facet_wrap(~sim) + 
+	geom_line() + 
+	geom_point(size = 1) +
+	coord_cartesian(ylim = c(0, 1.5)) + 
+	scale_y_continuous(breaks = seq(0, 2, 0.2)) + 
+	scale_color_manual(values= colors4) + 
+	labs(
+		   title = "Inflation-adjusted replacement rate under alternative return and policy scenarios",
+		   subtitle = "Assumed inflation: 2.75%",
+		   x = NULL,
+			 y = "Replacement rate (inflation adjusted)",
+			 color = "Policy")
+
+
+# 	spread(Var, value) %>% 
+# 	left_join(runs_select_df, by = "sim_name") %>% 
+# 	select(sim_label, everything(), -sim_name) %>% 
+# 	gt %>% 
+# 	cols_label(sim_label = "Policy") %>% 
+# 	fmt_number(
+# 		contains("th"),
+# 		decimals = 0) %>% 
+# 	tab_header(
+# 		title = html("Distribution of 30-year present value of benefit"),
+# 		subtitle = "For members who retire at age 60 with 35 years of service in 2020"
+# 	) %>% 
+# 	tab_source_note(
+# 		source_note = "Note: starting benefit is normalized to $100"
+# 	)
+
+
+
+
+# results_indivRet %>% 
+# 	ungroup() %>% 
+# 	mutate(sim = rep((-1):5, each =  100716)) %>% 
+# 	filter(start_year == 1990, ea == 30, year >=2020, sim ) %>%
+# 	group_by(sim) %
+# 	
+
+
+
+
+
+# df_divRate <- 
+# results_indiv %>% 
+# 	ungroup() %>% 
+# 	filter(ea == 25, age <=64) %>% 
+# 	select(sim_name, year, sim, cbi) %>% 
+# 	group_by(sim_name, sim) %>% 
+# 	summarise(sim_name = unique(sim_name),
+# 						sim      = unique(sim),
+# 						cbi      = get_geoReturn(cbi)
+# 						) %>% 
+# 	rename(value = cbi) %>% 
+# 	mutate(
+# 				 sim_name = factor(sim_name, 
+# 				 									levels = runs_select_df$sim_name,
+# 				 									labels = runs_select_df$sim_label
+# 				 									),
+# 				 sim = paste0("sim ", sim)
+# 				 )  
+# 
+# 
+# tbl_divRate <- 
+#   df_divRate %>%  
+# 	spread(sim, value) %>% 
+# 	ungroup() %>% 
+# 	# left_join(runs_select_df, by = "sim_name") %>% 
+# 	select(sim_name, everything()) %>% 
+# 	gt %>% 
+# 	cols_label(sim_name = "Policy") %>% 
+# 	fmt_percent(
+# 		columns = 2:8,
+# 		# contains("th"),
+# 		decimals = 1) %>% 
+# 	tab_header(
+# 		title = html("40-year compound annual rate of interest credit plus dividend"),
+# 	)
+# tbl_divRate
+# 
+
+
+
+{
+# 
+# get_benefit <- function(df, year1, span = 30, ret_age = 60){
+# 
+# # 
+# # df <- results_all	
+# # year1 <- 2021
+# # span       <- 30
+# # ret_age <- 60
+# 
+# if(span < 21) stop("span must be no less than 21")
+# if(max(results_all$year) < year1 + span - 1) stop("Time span exceeds the max year in data.")
+# 
+# 
+# ## Create a model run with cola_actual = infl and append to results_all
+# # df_colaFull <- 
+# #   #results_all %>% 
+# #   df %>% 
+# # 	filter(runname == "baseline") %>% 
+# # 	mutate(cola_actual = infl,
+# # 				 runname     = "cola_full")
+# 
+# ## df of annual benefit payments and discount factors
+# df_benefit <- 
+# 	#bind_rows(df, df_colaFull) %>%
+# 	df %>% 
+# 	filter(year %in% (year1 + seq_len(span) - 1)) %>% 
+# 	select(sim_name, sim, year, cola_actual) %>% 
+# 	group_by(sim_name, sim) %>% 
+# 	mutate(age = seq_len(span) - 1 + ret_age ) %>% 
+# 	# left_join(decrement %>% ungroup() %>% filter(ea == min(ea))  %>% select(age, qxm.r) , by = "age") %>% 
+# 	mutate(#qxm.r   = ifelse(age == max(age), 1, qxm.r),
+# 				 #fct_qxm = ifelse(age == 60, 1, lag(cumprod(1-qxm.r))),
+# 				 fct_dr      = 1/(1 + dr)^(age - ret_age),
+# 				 #fct_dr_low  = 1/(1 + dr_low)^(age - 60),
+# 				 B       = ifelse(str_detect(sim_name, "hybrid"), 100, 200) * ifelse(age == ret_age, 1, lag(cumprod(1+cola_actual))),
+# 				 B_real  = B / (1 + infl)^(age - ret_age),
+# 				 # B_real_chg5y = rollapply(B_real, width = 6, get_nyearMin, fill = NA, align = "right"),
+# 				 salary  = 100/(0.02*(60-25))
+# 				 )
+# # 
+# # df_benefit %>% 
+# # 	filter(sim == 9)
+# 
+# 
+# df_benefit_qtile <- 
+# 	df_benefit %>%
+# 	filter(sim >= 1) %>% 
+# 	group_by(sim_name, sim) %>% 
+# 	summarise(sim_name = unique(sim_name),
+# 						B_PV_dr    = sum(B * fct_dr),
+# 						#B_PV_tot   = sum(B* fct_dr * fct_qxm),
+# 						#B_real_chg5yMin = min(B_real_chg5y, na.rm = TRUE),
+# 						B_real_age75   = B_real[age == 75],
+# 						replacement_real_age75 =  (B_real/salary)[age == 75]
+# 	) %>% 
+# 	summarise(sim_name = unique(sim_name),
+# 						
+# 						B_PV_dr_q90 = quantile(B_PV_dr, 0.90),
+# 						B_PV_dr_q75 = quantile(B_PV_dr, 0.75),
+# 						B_PV_dr_q50 = quantile(B_PV_dr, 0.50),
+# 						B_PV_dr_q25 = quantile(B_PV_dr, 0.25),
+# 						B_PV_dr_q10 = quantile(B_PV_dr, 0.10),
+# 						B_PV_dr_q1 = quantile(B_PV_dr, 0.01),
+# 						
+# 						# B_PV_tot_q90 = quantile(B_PV_tot, 0.90),
+# 						# B_PV_tot_q75 = quantile(B_PV_tot, 0.75),
+# 						# B_PV_tot_q50 = quantile(B_PV_tot, 0.50),
+# 						# B_PV_tot_q25 = quantile(B_PV_tot, 0.25),
+# 						# B_PV_tot_q10 = quantile(B_PV_tot, 0.1),
+# 						
+# 						# B_real_chg5yMin_q90 = quantile(B_real_chg5yMin, 0.90),
+# 						# B_real_chg5yMin_q75 = quantile(B_real_chg5yMin, 0.75),
+# 						# B_real_chg5yMin_q50 = quantile(B_real_chg5yMin, 0.50),
+# 						# B_real_chg5yMin_q25 = quantile(B_real_chg5yMin, 0.25),
+# 						# B_real_chg5yMin_q10 = quantile(B_real_chg5yMin, 0.1),
+# 						
+# 						B_real_age75_q90 = quantile(B_real_age75, 0.90),
+# 						B_real_age75_q75 = quantile(B_real_age75, 0.75),
+# 						B_real_age75_q50 = quantile(B_real_age75, 0.50),
+# 						B_real_age75_q25 = quantile(B_real_age75, 0.25),
+# 						B_real_age75_q10 = quantile(B_real_age75, 0.10),
+# 						B_real_age75_q1 = quantile(B_real_age75, 0.01),
+# 						
+# 						replacement_real_age75_q90 = quantile(replacement_real_age75, 0.90),
+# 						replacement_real_age75_q75 = quantile(replacement_real_age75, 0.75),
+# 						replacement_real_age75_q50 = quantile(replacement_real_age75, 0.50),
+# 						replacement_real_age75_q25 = quantile(replacement_real_age75, 0.25),
+# 						replacement_real_age75_q10 = quantile(replacement_real_age75, 0.10),
+# 						replacement_real_age75_q1 = quantile(replacement_real_age75, 0.01),
+# 						
+# 						.groups = "drop"
+# 						)
+# 
+# list(
+# 	benefit       = df_benefit,
+# 	benefit_qtile = df_benefit_qtile 
+# )
+# 
+# }
+# 
+# 
+# df_benefit_y30  <- get_benefit(results_all, year1 = 2020, span = 30, ret_age = 60)
+# 
+# 
+# #df_benefit_y30$benefit_qtile[1,6]== df_benefit_y30$benefit_qtile[2,6]
+# 
+# 
+# 
+# run_base <- "Dev_hybrid_CC"
+# 
+# runs_select_ben_df <- 
+# 	runs_select_df 
+# #   %>% 
+# # 	filter(sim_name %in% c("regularAll_sharedADC_vCola",
+# # 												 "regularAll_sharedADC_fixedCola"
+# # 												 ))
+# 
+# 
+# ## Table of distribution of PV benefit
+# 
+# tbl_pvB <- 
+#   df_benefit_y30$benefit_qtile %>% 
+# 	filter(sim_name %in% runs_select_ben_df$sim_name) %>% 
+# 	select(sim_name, starts_with("B_PV_dr")) %>% 
+# 	gather(Var, value, -sim_name) %>% 
+# 	mutate(#value = 100 * value / value[sim_name == run_base& str_detect(Var, "q50")],
+# 				 Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+# 				 Var   = factor(Var) %>% fct_inorder()
+# 				 ) %>% 
+# 	spread(Var, value) %>% 
+# 	left_join(runs_select_df, by = "sim_name") %>% 
+# 	select(sim_label, everything(), -sim_name) %>% 
+# 	gt %>% 
+# 	cols_label(sim_label = "Policy") %>% 
+# 	fmt_number(
+# 		contains("th"),
+# 		decimals = 0) %>% 
+# 	tab_header(
+# 		title = html("Distribution of 30-year present value of benefit"),
+# 		subtitle = "For members who retire at age 60 with 35 years of service in 2020"
+# 	) %>% 
+# 	tab_source_note(
+# 		source_note = "Note: starting benefit is normalized to $100"
+# 	)
+# 
+# tbl_pvB
+# 
+# 
+# ## Table of distribution of replacement rate (real) at age 75
+# 
+# tbl_replacment <- 
+#   df_benefit_y30$benefit_qtile %>% 
+# 	filter(sim_name %in% runs_select_ben_df$sim_name) %>% 
+# 	select(sim_name, starts_with("replacement")) %>% 
+# 	gather(Var, value, -sim_name) %>% 
+# 	mutate(#value = 100 * value / value[sim_name == run_base& str_detect(Var, "q50")],
+# 				 Var   = paste0(str_extract(Var, "q\\d+"), "th") ,
+# 				 Var   = paste0(str_extract(Var, "\\d+"), "th") ,
+# 				 Var   = factor(Var) %>% fct_inorder()
+# 				 ) %>% 
+# 	spread(Var, value) %>% 
+# 	left_join(runs_select_df, by = "sim_name") %>% 
+# 	select(sim_label, everything(), -sim_name) %>% 
+# 	gt %>% 
+# 	cols_label(sim_label = "Policy") %>% 
+# 	fmt_percent(
+# 		contains("th"),
+# 		decimals = 1) %>% 
+# 	tab_header(
+# 		title = html("Distribution of replacement rate at age 75"),
+# 		subtitle = "For members who retire at age 60 with 35 years of service in 2020"
+# 	) %>% 
+# 	tab_source_note(
+# 		source_note = "Note: benefits at age 75 are adjusted for inflation; assumed inflation = 2.75%"
+# 	)
+# 
+# 
+# tbl_replacment
+}
+
+```
+
+### New retirees in 2020 {.tabset}
+
+Cohort examined:
+
+-   Retire at age 60 in 2020
+
+-   Joined the plan at age 25 in 1985 (35 years of service upon retirement )
+
+#### Replacement rate {.unnumbered}
+
+The inflation-adjusted replacement rates decline over time because the assumed inflation (2.75%) is higher than the benefit adjustment rate when return assumption is met (around 1.8% per year).
+
+```{r echo=FALSE, fig.width= 12, fig.height= 10}
+#tbl_pvB
+fig_replacement
+
+```
+
+#### Present value of benefit {.unnumbered}
+
+```{r echo=FALSE, fig.width= 12, fig.height= 10}
+#tbl_pvB
+tbl_Ret60_pv
+
+```
+
+### New employees in 2020 {.tabset}
+
+Cohort examined:
+
+-   Join the plan at age 25 in 2020
+
+-   Retire at age 60 in 2055 (35 years of service upon retirement)
+
+#### Replacement rate upon retirement {.unnumbered}
+
+```{r echo=FALSE}
+#tbl_pvB
+tbl_active65
+
+```
+
+# Appendix
+
+## "Money purchase effect" on valuation
+
+The description of "money purchase effect" on valuation results in the 2019 valuation report (p. A-2, please note that "normal cost" below refers to Frozen Initial Liability (FIL) normal cost that includes amortization cost):
+
+'There are three general reasons why contribution rates change from one valuation to the next. The first is a change in the benefits or eligibility conditions of the plan. The second is a change in the valuation assumptions used to project future occurrences. The third is the difference during the year between the plan's actual experience and what the assumptions predicted.
+
+In Wisconsin, there is a fourth reason. When the contribution rate changes for any of the first three reasons, the effect of the change is split evenly between employers and participants, except for protective occupation participants. When the participant normal cost changes, projected future participant account balances also change. By statute, the value of the participant retirement benefits must be at least equal to twice the account balance at retirement. This then changes the value of the retirement benefit, which then changes the total normal cost, which is then split between employers and participants. This final effect on normal cost is referred to as the "Money Purchase Effect."'\
