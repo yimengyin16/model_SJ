@@ -43,11 +43,13 @@ returnScenarios <- read_excel(filePath_runControl, sheet="returns", skip = 0) %>
 #*******************************************************************************
 #                           ### Run simulations ####                      
 #*******************************************************************************
+# 
+# sim_name_run <-  sim_runList$sim_name[[1]] #"pf.t1_colaCut1_lowERC"
+# sim_paramlist <- filter(sim_runList, sim_name == sim_name_run) %>% as.list
 
 
 for(sim_name_run in sim_runList$sim_name){
   
-  #sim_name_run <- "pf.t1_colaCut1_lowERC"
   sim_paramlist <- filter(sim_runList, sim_name == sim_name_run) %>% as.list
  
   source("model/simulation/model_sim0_master.R")

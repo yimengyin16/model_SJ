@@ -1,11 +1,7 @@
 # Simulation 
 
-
 # Valuation name
 # rm(list = ls())
-
-#source("libraries.R")
-
 
 #sim_name_run <- "Dev_pf.t1"
 #sim_paramlist <- filter(sim_runList, sim_name == sim_name_run) %>% as.list
@@ -16,11 +12,6 @@ cat("Running simulation", sim_paramlist$sim_name, "\n")
 #*******************************************************************************
 #                         Load data                                         ####
 #*******************************************************************************
-
-# sim_paramlist$run_val <- FALSE
-# if(sim_paramlist$run_val){
-#   source(paste0("model/valuation/model_val_create_", sim_paramlist$val_name, ".R"))
-# }
 
 # Load tier data
 dir_val <- "model/valuation/outputs_val/"
@@ -50,7 +41,7 @@ i.r[1:10, 1:5]
 # source("model/simulation/model_sim_simulation_MEPERS(1).R") # no caps, no risk sharing
 # source("model/simulation/model_sim_simulation_MEPERS(1).R") # caps, no risk sharing
 
-source("model/simulation/model_sim_simulation_SJ(2).R") # caps, simple contingent COLA
+source("model/simulation/model_sim_simulation_SJ(3).R") # caps, simple contingent COLA
 
 {
   start_time <- Sys.time()	
@@ -87,7 +78,11 @@ saveRDS(outputs_list, file = paste0(dir_outputs, "sim_", sim_name_run, ".rds"))
 
 # Display1 Basic examination
 var_display1 <- c("sim_name", "val_name", "sim", "year", 
-                  "AL", "FR_MA",  "UAAL", "ERC", "ERC_PR","EEC_PR", "NC",
+                  "AL", "FR_MA",  "UAAL", "ERC", "ERC_PR","EEC_PR", 
+                  "NC_PR",
+                  "EEC.SC_PR",
+                  "SC_PR",
+                  "NC",
                   "MA",
                   "AL", 
                   "AL.active", 
@@ -113,9 +108,9 @@ var_display1 <- c("sim_name", "val_name", "sim", "year",
                   "PVFB.active.servRet",
                   "cola_actual",
                   "B",
-                  "NC_PR",
-                  "ERC_PR",
-                  "EEC_PR",
+
+                  #"ERC_PR",
+                  #"EEC_PR",
                   # "ADC", 
                   "NC", "ERC", "EEC", "SC", "LG", "i.r", "PR",
                   "n_actives"
@@ -164,12 +159,13 @@ penSim_results %<>%
          ALa.servRet_PR = AL.active.servRet/PR,
          ALa.disbRet_PR = AL.active.disbRet/PR,
          ALa.defrRet_PR = AL.active.defrRet/PR,
-         ALa.death_PR   = AL.active.death/PR
-         
+         ALa.death_PR   = AL.active.death/PR,
+         EEC.SC_PR = 100*EEC.SC/PR
          )
 
 
-penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display2))  %>% print
+penSim_results %>% filter(sim == -2)  %>% select(one_of(var_display1))%>% print
+# mutate(EEC.SC_PR_chg = EEC.SC_PR - lag(EEC.SC_PR) ) 
 # penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
 # penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print
 
