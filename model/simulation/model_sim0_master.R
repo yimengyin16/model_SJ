@@ -164,7 +164,7 @@ penSim_results %<>%
          )
 
 
-penSim_results %>% filter(sim == -2)  %>% select(one_of(var_display1))%>% print
+penSim_results %>% filter(sim == -1)  %>% select(one_of(var_display1))%>% print
 # mutate(EEC.SC_PR_chg = EEC.SC_PR - lag(EEC.SC_PR) ) 
 # penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
 # penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print
@@ -172,6 +172,7 @@ penSim_results %>% filter(sim == -2)  %>% select(one_of(var_display1))%>% print
 print(end_time  - start_time)
 
 
+#
 penSim_results$PV
  
 # penSim_results %>% filter(sim == 0, year == max(year)) %>% 

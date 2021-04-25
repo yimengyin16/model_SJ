@@ -147,7 +147,7 @@ pop <- get_demographics(ls_tierData)
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_indivLiab_flexbf(4).R", local = TRUE)
+source("model/valuation/model_val_indivLiab_flexbf(6).R", local = TRUE)
 
 indivLiab <- list()
 

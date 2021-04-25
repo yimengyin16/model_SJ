@@ -516,7 +516,7 @@ run_sim <- function(i.r_ = i.r,
   registerDoParallel(cl)
   
   penSim_results <- foreach(k = -2:nsim, .packages = c("dplyr", "tidyr", "purrr")) %dopar% {
-    # k <- 0
+    #k <- -2
     # initialize
     penSim   <- penSim0
     SC_amort <- SC_amort0
@@ -531,7 +531,7 @@ run_sim <- function(i.r_ = i.r,
     for (j in 1:nyear){
         
      # it_j <- iterators::iter(1:nyear)
-     # j    <- iterators::nextElem(it_j); j
+     #j    <- iterators::nextElem(it_j); j
 
     	
     	#***********************************
@@ -834,6 +834,8 @@ run_sim <- function(i.r_ = i.r,
           
           penSim$EEC.SC[j] <- with(penSim, min( (EEC.SC[j-1]/PR[j-1] + EECrate_UALchgCap) * PR[j], 
                                                 SC[j] * EEC_ADCshare))
+          penSim$EEC.SC[j] <- na2zero(penSim$EEC.SC[j]) # NaN when PR[j-1] is 0.
+          
           # penSim$EEC.SC[j] <- max(0, penSim$EEC.SC[j])
         }
         
