@@ -1,0 +1,730 @@
+---
+title: "CalPERS State plan & policy options: \npreliminary results for discussion"
+output:
+  html_notebook:
+    toc: yes
+    number_sections: yes
+  word_document:
+    toc: yes
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r loading results, include=FALSE}
+
+source(paste0(here::here(), "/libraries.R"))
+
+
+
+dir_simResults <- "model/simulation/outputs_sim/"
+
+source(paste0(here::here(), "/analysis/analysis_loadingResults.R"))
+
+
+vars_report <- c("sim_name","sim", "year", "AL", "UAAL", "FR_MA", "ERC", "ERC_PR", "EEC", "EEC_PR", "NC_PR", "NC.ER_PR", "SC_PR")
+vars_table  <- c("sim_name", "year", "AL", "FR_MA", "ERC", "ERC_PR")
+
+
+ 
+df_results %>% filter(sim == 1, year == 2019) %>% 
+	select(vars_report)
+
+ 
+
+
+
+```
+
+
+$~$
+
+
+# **Updates**
+
+## What's new 
+
+Updates since the previous 
+
+- Classic members and PEPRA members are modeled separately. 
+- Add the 5-year ramp-up period to the amortization method
+- Add analysis of the impact on member benefit (in progress)
+
+
+Updates since the memo of June 28, 2020
+
+- Added results for a new group consisting of state safety, peace officers and firefighters(POFF), and California Highway Patrol(CHP) members.
+- Added 3 new policies that involve lesser reductions in the COLA and in the benefit factor for future service
+- Added a contingent COLA policy in which COLA is determined based on funded ratio calculated using 5% discount rate.
+- Minor modeling improvements that cause numbers to change slightly from the previous memo 
+
+
+## Future updates
+We're working on the following changes for the next update.
+
+- Modeling classic members and PEPRA members separately
+- Impacts on plan members
+- Stochastic analysis
+- Various minor policy features of PERF A (e.g. amortization with ramp-up period)
+
+
+
+$~$
+
+
+# **Overview**
+
+
+## Policy scenarios
+We have modeled each group under current policy and under three types of alternative policies, each with several variants differing in the degree that benefits are affected:
+
+1. Benefit factor reduction: For all future years of service for all active employees, an x% reduction in the “benefit factor.” (The benefit factor is multiplied by a plan member’s final salary and years of service to determine the initial retirement benefit.) This is far more aggressive than the policies that have been tested in “California Rule” litigation, which have
+focused on much narrower scaling back of future benefits (e.g., disallowing “air time”). Variants:
+  
+    - 50% reduction to benefit factor.
+    - 25% reduction to benefit factor.
+    - (Example: If the original benefit factor is 3%, it will become 2.25% after a 25% reduction )
+
+2. COLA suspension: The COLA/escalator is suspended or reduced until the plan's funded ratio reaches a certain level. Variants:
+
+    - COLA is fully suspended until the plan is fully funded under the plan chosen actuarial discount rate (7%).
+    - COLA is reduced from 2% to 1% per year until the plan is fully funded under the plan chosen actuarial discount rate (7%).
+    - COLA is reduced from 2% to 1% per year until the plan is fully funded under a more conservative discount rate (5%). (Similar to the Rhode Island plan) 
+    
+
+3. Both policies combined: The benefit factor is reduced and the COLA is
+suspended/reduced. Variants:
+
+    - 50% benefit factor reduction + full COLA suspension until full funding (7% discount rate)
+    - 25% benefit factor reduction + COLA reduced to half (1%) until full funding (7% discount rate)  
+
+We assume all policies go fully into effect in the first year. The benefit factor reduction affects future
+service of current workers and all service of new hires. The COLA suspension affects all current retirees,
+all current workers, and all new hires.
+
+
+The policies with greater benefit reductions help define bounds, and the policies with lesser benefit reductions are closer to what might be practical for policymakers. 
+
+Additional variants that we may explore in the future: (1) providing lesser reductions for older retirees or workers who are close to retirement, (2) apply only to new hires. These variants would provide lower fiscal savings and greater protection to plan
+members.
+
+## Assumptions on how the San Jose government would respond 
+We examined these policies under two assumptions about how California governments would respond:
+
+1. Assumption A: Take the savings now, in lower contributions: All policies reduce actuarial
+liability, unfunded liability, and normal cost. Lower normal cost and amortization cost reduce
+the actuarially determined contribution (ADC). Under this assumption employers pay just the ADC,
+which would be lower than what they pay now.
+
+2. Assumption B: Maintain employer contributions despite the ADC reduction: Even though the ADC is
+lower, employers pay the ADC plus an additional contribution to keep their payments near
+where they were before, reducing unfunded liability more quickly than otherwise. However, this
+can interact with the contingent COLA: if full funding is reached sooner, then benefit payments
+will go up as the COLA is put back into effect.
+
+
+## Investment return scenarios
+In the tables below we show results for 2018 (the actuarial valuation year and our first year) and for
+2028. The model goes out much further in time and it can be useful to pay attention to later time
+periods as well to gain a better understanding of investment risks and amortization policies.
+We have examined these policies and variants under three investment scenarios:
+
+1. Deterministic: 7% investment return assumption achieved every year. This is the CalPERS
+assumption, save for any planned earnings assumption reductions.
+
+2. Deterministic asset shock: This is based loosely on stress-test scenarios used by Pew, which in
+turn are based loosely on Dodd-Frank assumptions. We assume 7% return in 2018, 2% in 2019,
+negative 24% in 2020, then 3 years of 12% (2021-2023), then 7% annually thereafter.
+
+3. Stochastic: 7% expected mean return, 12% standard deviation: This allows us to see how the
+policies, particularly the contingent COLA policy, interact with investment return volatility.
+The tables below provide summary results for the deterministic scenarios. We will add tables for the
+stochastic return scenario in a later iteration.
+
+
+# **Preliminary results**
+
+Notes:
+
+- For tier 2, the pre-1999 policy change has minimal impact on the NC of tier 2
+
+- For measure B, 1.5% assumed COLA for valuation may be too low. Funded ratio is expected to rise above 100% in 4-6 years. Just keep the COLA assumption and just allow for cost reduction through actuarial gains?
+
+
+
+```{r funSummaryDetail, include=FALSE}
+# library(officer)
+
+# select group names:
+# library(gt)
+
+
+colors_manual <- c("grey30", "orange", brewer_pal(type = "qual", palette = "Paired")(2), 
+									           brewer_pal(type = "qual", palette = 1 )(1) )
+
+df_results %<>% 
+	mutate(C = ERC + EEC,
+		     C_PR = 100 * C/PR)
+
+df_fig_det <- 
+  df_results %>% 
+	filter(sim == 0, year <= 2050) %>% 
+	select(sim_name, year, AL, FR_MA, ERC_PR, EEC_PR, NC_PR, C_PR,C, SC_PR,SC, C_ADC, PR, LG, ERC, POB_payment) %>% 
+	mutate(AL = AL/1e6,
+				 policy = str_remove(sim_name,  "pf.agg_|pf.t1_|pf.t2_"),
+         tier   = str_extract(sim_name, "pf.agg|pf.t1|pf.t2"),
+				 ) 
+
+
+df_fig_shock <- 
+  df_results %>% 
+	filter(sim == -2, year <= 2050) %>% 
+	select(sim_name, year, AL, FR_MA, ERC_PR, EEC_PR, NC_PR) %>% 
+	mutate(AL = AL/1e6,
+				 policy = str_remove(sim_name,  "pf.agg_|pf.t1_|pf.t2_"),
+         tier   = str_extract(sim_name, "pf.agg|pf.t1|pf.t2"),
+				 ) 
+
+
+df_fig_det %>% 
+	filter(str_detect(sim_name, "agg")) %>% 
+	kable(digits = 0)
+
+
+
+
+
+fig_AL_det <-   
+  df_fig_det %>% 
+	# gather(Var, value, -sim_name, -year) %>% 
+	ggplot(aes(x = year, y = AL, color = policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	coord_cartesian(ylim = c(0, 10000)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 10))) + 
+	scale_y_continuous(breaks = c(seq(0, 10000, 1000))) + 
+	scale_color_manual(values = colors_manual) + 
+	theme(legend.position = "bottom")
+
+
+fig_FR_det <- 
+  df_fig_det %>% 
+	# gather(Var, value, -sim_name, -year) %>% 
+	ggplot(aes(x = year, y = FR_MA, color = policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	geom_hline(yintercept = 100, linetype = 2, color = "grey50") + 
+	coord_cartesian(ylim = c(50, 150)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_y_continuous(breaks = c(seq(0, 200, 10))) + 
+	scale_color_manual(values = colors_manual) +
+		theme(legend.position = "bottom")
+
+
+
+fig_C_det <- 
+df_fig_det %>% 
+	ggplot(aes(x = year, y = C, color = policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	#coord_cartesian(ylim = c(0, 150)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	#scale_y_continuous(breaks = c(seq(0, 200, 10))) + 
+	scale_color_manual(values =  colors_manual) +
+		theme(legend.position = "bottom")
+
+
+fig_ERC_PR_det <- 
+df_fig_det %>% 
+	ggplot(aes(x = year, y = ERC_PR, color = policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	coord_cartesian(ylim = c(0, 120)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_y_continuous(breaks = c(seq(0, 200, 10))) + 
+	scale_color_manual(values =  colors_manual) +
+		theme(legend.position = "bottom")
+
+fig_EEC_PR_det <- 
+df_fig_det %>% 
+	ggplot(aes(x = year, y = EEC_PR, color = policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	coord_cartesian(ylim = c(0, 20)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_y_continuous(breaks = c(seq(0, 200, 2))) + 
+	scale_color_manual(values =  colors_manual)+
+		theme(legend.position = "bottom")
+
+fig_NC_PR_det <- 
+df_fig_det %>% 
+	ggplot(aes(x = year, y = NC_PR, color = policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	coord_cartesian(ylim = c(0, 45)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_y_continuous(breaks = c(seq(0, 200, 5))) + 
+	scale_color_manual(values =  colors_manual) +
+		theme(legend.position = "bottom")
+
+
+
+
+
+fig_AL_shock <-   
+  df_fig_shock %>% 
+	# gather(Var, value, -sim_name, -year) %>% 
+	ggplot(aes(x = year, y = AL, color = policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	coord_cartesian(ylim = c(0, 10000)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_y_continuous(breaks = c(seq(0, 10000, 1000))) + 
+	scale_color_manual(values =  colors_manual) + 
+	theme(legend.position = "bottom")
+
+
+fig_FR_shock <- 
+  df_fig_shock %>% 
+	# gather(Var, value, -sim_name, -year) %>% 
+	ggplot(aes(x = year, y = FR_MA, color =  policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	geom_hline(yintercept = 100, linetype = 2, color = "grey50") + 
+	coord_cartesian(ylim = c(50, 150)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_y_continuous(breaks = c(seq(0, 200, 10))) + 
+	scale_color_manual(values = colors_manual) +
+		theme(legend.position = "bottom")
+
+
+fig_ERC_PR_shock <- 
+df_fig_shock %>% 
+	ggplot(aes(x = year, y = ERC_PR, color =  policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	coord_cartesian(ylim = c(0, 120)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_y_continuous(breaks = c(seq(0, 200, 10))) + 
+	scale_color_manual(values = colors_manual) +
+		theme(legend.position = "bottom")
+
+fig_EEC_PR_shock <- 
+df_fig_shock %>% 
+	ggplot(aes(x = year, y = EEC_PR, color =  policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	coord_cartesian(ylim = c(0, 20)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_y_continuous(breaks = c(seq(0, 200, 2))) + 
+	scale_color_manual(values = colors_manual)+
+		theme(legend.position = "bottom")
+
+fig_NC_PR_shock <- 
+df_fig_shock %>% 
+	ggplot(aes(x = year, y = NC_PR, color =  policy)) + theme_bw() + 
+	facet_grid(~tier)+
+	geom_line() + 
+	geom_point() + 
+	coord_cartesian(ylim = c(0, 45)) + 
+	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_y_continuous(breaks = c(seq(0, 200, 5))) + 
+	scale_color_manual(values = colors_manual) +
+		theme(legend.position = "bottom")
+
+
+
+
+
+
+
+# 
+# 
+# df_results %>%
+# 	filter(str_detect(sim_name, "pf.agg_"), sim == 0, year %in% c(2019, 2029)) %>%
+#   mutate(AL   = AL/1e6,
+#          UAAL = UAAL/1e6,
+#          ERC  = ERC/1e6,
+#   			 EEC  = EEC/1e6) %>%  
+# 	select(sim_name, year, ERCType, v1_AL = AL, v2_UAAL = UAAL,v3_FR_MA = FR_MA, v4_ERC_PR = ERC_PR, v5_EEC_PR = ERC_PR, v6_NC_PR = NC_PR) %>% 
+# 	gather(Var, value, -sim_name, -year, -ERCType) %>% 
+#   mutate(Var = paste0( "y", year, "_", Var ),
+#          year = NULL
+#          ) %>% 
+#   spread(Var, value) %>% 
+#   as_tibble() %>% 
+#   mutate(ERCpolicy = factor(ERCType, 
+#                             levels = c("none", "Low ERC", "High ERC"),
+#   													labels = c("", "Low ERC", "High ERC")
+#                             )) %>% 
+# 	relocate(ERCpolicy, sim_name) %>% 
+# 	arrange(ERCpolicy) %>% 
+# 	gt()
+
+
+
+
+# 
+# 
+# make_summaryTable_detailed <- function(grpName, sim_select){
+# 
+# sim_select <- 0
+# grpName <- "pf.agg"
+# grpName_label <- switch (grpName,
+# 												 pf.agg  = "Police and Fire, total",
+#                          miscAll = "Group: State misc and industrial",
+#                          sftyAll = "Group: State safety, POFF, and CHP",
+#                          misc2t  = "Group: State misc and industrial",
+#                          sfty2t  = "Group: State safety, POFF, and CHP",
+#                          all2t   = "Group: All state members",
+#                          )
+# 
+# return_label <- switch (as.character(sim_select),
+#   "0"  = "Assumes investment returns of 6.75% every year (based on CalPERS assumptions)",
+#   "-2" = "Asset shock"  # 6.7% in 2019, 2% in 2019, minus 24% in 2020, then 3 years of 12% (2021-2023), then 7% annually"
+# )
+# 
+# 
+#  
+# 
+#  df <- 
+#   df_results %>% 
+#   filter(sim == sim_select,
+#         year %in% c(2019, 2029)) %>% 
+#   mutate(AL   = AL/1e6,
+#          UAAL = UAAL/1e6,
+#          ERC  = ERC/1e6) %>% 
+#   select(year, sim_name, v1_AL = AL, v2_UAAL = UAAL, v3_ERC = ERC, v4_FR_MA = FR_MA, v5_ERC_PR = ERC_PR) %>% 
+# 
+#   gather(Var, value, -sim_name, -year) %>% 
+#   mutate(Var = paste0( "y", year, "_", Var ),
+#          year = NULL
+#          ) %>% 
+#   spread(Var, value) 
+# # df_summary_det
+# 
+# # make_summaryTable <- function(df, grpName, grpName_label){
+#   
+# 
+# 
+#     
+# bind_rows(
+#   (df %>% 
+#     filter(str_detect(sim_name, grpName), str_detect(sim_name, "baseline")) %>% 
+#     mutate(ERCpolicy = "")
+#    ),
+# 
+#   (df %>% 
+#     filter(str_detect(sim_name, grpName)) %>% 
+#     mutate(across(!contains(c("ERC_PR", "FR_MA", "sim_name")) , ~ 100*(.x/.x[str_detect(sim_name, "baseline")] - 1))) %>% 
+#     mutate(across(contains(c("ERC_PR", "FR_MA")) , ~ .x - .x[str_detect(sim_name, "baseline")])) %>% 
+#     mutate(ERCpolicy = str_extract(sim_name, "lowERC|highERC")) %>% 
+#    	filter(!str_detect(sim_name, "baseline"))
+#     )
+#   ) %>%
+#   as_tibble() %>% 
+#   mutate(ERCpolicy = factor(ERCpolicy, 
+#                             levels = c("", "lowERC", "highERC"),
+#                             labels = c("", "Low ERC", "High ERC")
+#                             
+#                             )) %>% 
+#   arrange(ERCpolicy) %>% 
+#   relocate(ERCpolicy) %>% 
+#   mutate(sim_name = factor(sim_name, 
+#                            levels = df_simNames$simName) 
+#                            # labels = df_simNames$label_simName)
+#          ) %>% 
+#   flextable() %>% 
+#   
+#   # Global settings
+#    hrule(rule = "exact", part = "all") %>%
+#   
+#   # Header
+#    add_header_row(values = c("", 
+#                             "2018",
+#                             "2028"),
+#                  colwidths = c(2,5,5)) %>%
+#   
+#    theme_booktabs() %>% 
+#    # add_header_lines(values = "(Amounts in $ billions)" ) %>%
+#    add_header_lines(values = return_label) %>%
+#    add_header_lines(values = grpName_label) %>%  
+#    add_header_lines(values = "Estimated impacts of selected policy alternatives" ) %>%
+#    
+#    align(align = "center", part = "header")  %>%
+#    height(part = "header",   height = .5, i = 1) %>% 
+#    height(part = "header",   height = .5, i = 4:5) %>% 
+#    fontsize(size = 12, part = "header") %>%
+#    fontsize(size = 18, part = "header", i = 1) %>% 
+#    fontsize(size = 16, part = "header", i = 2) %>% 
+#    fontsize(size = 14, part = "header", i = 3) %>% 
+#    set_header_labels(values =
+#                       list(
+#                       ERCpolicy  = "",
+# 										  sim_name   = "policy scenario",
+# 										  
+# 										  y2018_v1_AL  = "Actuarial\nLiability",
+# 										  y2028_v1_AL  = "Actuarial\nLiability",
+# 										  
+# 										  y2018_v2_UAAL  = "UAAL",
+# 										  y2028_v2_UAAL  = "UAAL",
+# 										  
+# 										  y2018_v3_ERC  = "Employer\ncontribution\n(ERC)",
+# 										  y2028_v3_ERC  = "Employer\ncontribution\n(ERC)", 
+# 										  
+# 										  y2018_v4_FR_MA  = "Funded ratio\n(MVA basis)",
+# 										  y2028_v4_FR_MA  = "Funded ratio\n(MVA basis)", 
+# 										  
+# 										  y2018_v5_ERC_PR  = "ERC as\n% of payroll",
+# 										  y2028_v5_ERC_PR  = "ERC as\n% of payroll"
+# 										  )
+# 										) %>% 
+#   
+#    # Body
+#    fontsize(size = 12, part = "body") %>% 
+#    width(j = 1,   width = 0.6)   %>%
+#    width(j = 2,   width = 3.5)   %>%
+#    width(j = 3:12, width = 1.1) %>%
+#    height(part = "body",   height = .5) %>%
+#   
+#    colformat_num(i = c(1), j = c(3:5, 8:10),    digits = 1, prefix = "$") %>%
+#    colformat_num(i = c(1), j = c(6:7, 11:12),    digits = 1, suffix = "%") %>%
+#    colformat_num(i = c(2:15), j = 3:12, digits = 1, suffix = "%") %>% 
+#    
+#    hline(part = "body", i = c(1, 8), border = officer::fp_border(color="gray40", width = 1.5)) %>% 
+#    hline(part = "body", i = c(4, 11), border = officer::fp_border(color="gray40", style = "dotted")) %>%  
+#    vline(part = "all", j = c(7), border = officer::fp_border(color="gray40", style = "dotted")) %>% 
+#    merge_v( j = "ERCpolicy") %>% 
+#    
+#   # Footer
+#   add_footer_lines(values = "Notes:") %>% 
+#   add_footer_lines(values = "Low ERC: Employer contributions are reduced to reflect lower actuarially determined contributions (ADC)") %>% 
+#   add_footer_lines(values = "High ERC: Employer contributions are approximately maintained despite drop in ADC") %>% 
+#   add_footer_lines(values = "Baseline: Liability, UAAL and ERC in $billions") %>% 
+#   add_footer_lines(values = "Alternative policies: Values are changes relative to baseline. Liability, UAAL and ERC are % changes; funded ratio and ERC rate are absolute changes (alternative minus baseline)") %>% 
+#   height(part = "footer",   height = .5) %>% 
+#   fontsize(size = 12, part = "footer") 
+# }  
+#       
+#make_summaryTable(df_summary_det, "miscAll", "Group: State Misc and Industrial")
+#make_summaryTable(df_summary_det, "sftyAll", "Group: State Safety, POFF, and CHP")
+
+```
+
+## Deterministic results, with 6.75% annual returns {.tabset}
+
+### AL {-}
+```{r echo=FALSE, fig.height=4.5, fig.width=11, message=FALSE, warning=FALSE}
+fig_AL_det
+
+```
+
+
+### Funded ratio (MVA) {-}
+```{r echo=FALSE, fig.height=4.5, fig.width=11}
+fig_FR_det
+
+```
+
+### ERC rate{-}
+```{r echo=FALSE, fig.height=4.5, fig.width=11, message=FALSE, warning=FALSE}
+fig_ERC_PR_det
+
+```
+
+
+
+### EEC rate{-}
+```{r echo=FALSE, fig.height=4.5, fig.width=11, message=FALSE, warning=FALSE}
+fig_EEC_PR_det
+
+```
+
+### Total NC rate{-}
+```{r echo=FALSE, fig.height=4.5, fig.width=11, message=FALSE, warning=FALSE}
+fig_NC_PR_det 
+
+```
+
+
+## Asset shock scenario (24% decline in portfolio) {.tabset}
+
+### AL{-}
+```{r echo=FALSE, fig.height=4.5, fig.width=11, message=FALSE, warning=FALSE}
+fig_AL_shock
+
+```
+
+
+### Funded ratio (MVA){-}
+```{r echo=FALSE, fig.height=4.5, fig.width=11}
+fig_FR_shock
+
+```
+
+### ERC rate{-}
+```{r echo=FALSE, fig.height=4.5, fig.width=11, message=FALSE, warning=FALSE}
+fig_ERC_PR_shock
+
+```
+
+
+
+### EEC rate{-}
+```{r echo=FALSE, fig.height=4.5, fig.width=11, message=FALSE, warning=FALSE}
+fig_EEC_PR_shock
+
+```
+
+### Total NC rate{-}
+```{r echo=FALSE, fig.height=4.5, fig.width=11, message=FALSE, warning=FALSE}
+fig_NC_PR_shock
+
+```
+
+
+
+
+$~$
+
+## Impact on member benefit
+
+Cohorts to examine
+
+- P&F tier 1
+  
+  - service retirees at age 60 in 2020: , assuming receiving benefits up to age 85 (start_year == 1985, ea = 25)
+  
+  - late-career active member: member at age 50 w/ entry age 25 in 2020, assuming service retirement age of 60 (start_year == 1995, ea = 25)
+  
+  - mid-career  active member: member at age 35 w/ entry age 25 in 2020, assuming service retirement age of 60 (start_year == 2010, ea = 25)
+
+- P&F tier 2
+
+  - Early
+
+
+
+
+- Special topic for disability retirees:
+ - examine the impact of the 50% FAS floor and the 90% benefit cap. 
+
+
+What to compare
+- Plotting annual benefit: age 60 to 85
+- Total PV benefit over age 60 to 85, dr = 6.75%, valuated at age 60
+
+
+scenario:
+- assumption met
+- asset shock 
+
+
+
+```{r}
+# Notes: use benefit values from the simulation with calibration undone
+
+# Need to extend simulation horizon to 70 years. 
+
+# What are needed:
+#   1. COLA
+#   2. Starting benefit
+
+
+## Extract COLA:
+df_cola <- 
+  df_results %>% 
+	filter(sim %in% c(-2, 0)) %>% 
+	filter(!str_detect(sim_name, ".agg")) %>% 
+	select(sim_name, val_name, plan, tier, policy, ERCType, tier, year, cola_actual)
+
+
+## Extract benefit data from valuation
+
+# Valuations needed
+#' - val_pf_baseline
+#' - val_pf_pre99
+#' - val_pf_measureB
+
+dir_val <- paste0(here::here(), "/model/valuation/outputs_val/")
+
+val_pf_baseline <- readRDS(paste0(dir_val, "val_pf_baseline.rds"))
+val_pf_pre99    <- readRDS(paste0(dir_val, "val_pf_pre99.rds"))
+val_pf_measureB <- readRDS(paste0(dir_val, "val_pf_measureB.rds"))
+
+
+get_pf.t1 <- function(df, policyFn, tierFn = "tier 1"){
+
+# df <- val_pf_baseline
+# policyFn = "Baseline"
+# tierFn   = "tier 1"
+
+df$indivLiab$pf.t1$active %>% 
+	mutate(start_year = year - (age - ea)) %>% 
+	filter( (start_year == 1985 & ea == 25)|
+				  (start_year == 1995 & ea == 25)|
+					(start_year == 2010 & ea == 25)
+				 ) %>% 
+	filter(age == 60) %>% 
+	mutate(policy = policyFn,
+				 tier   = tierFn) %>% 
+	select(tier, policy, start_year, ea, age, year, Bx, Bx.servRet.laca, sx) 
+}
+	
+	
+df_Bx <- 
+	bind_rows(
+		get_pf.t1(val_pf_baseline, "baseline"), 
+		get_pf.t1(val_pf_pre99, "pre99"),  
+		get_pf.t1(val_pf_measureB, "measureB")
+	)  
+
+df_cola
+
+## DF for cohort x policy x sim x year
+
+## Cohort is defined by:
+#'   plan, tier, start_year, ea, retAge
+
+## Policy is defined by:
+#'   plan, tier, policy, ERCType
+
+## First create df for cohorts covering the life span
+## Then, expand by policy
+## Then, join by cola in each policy in each year
+
+
+expand_cohort <- c("1985_25", "1995_25", "2010_25")
+expand_policy <- df_cola %>% 
+							mutate(policy = paste(policy, ERCType, sep = "_")) %>% 
+							pull(policy) %>% 
+							unique
+exapnd_sim  <- c(-2, 0)
+expand_year <- 2020:2090
+	
+
+df_cola	%>% 
+	filter(tier == "t1")
+	
+expand_grid(cohort = expand_cohort, df_cola)
+
+
+
+
+
+```
+
+
+
+
+
+

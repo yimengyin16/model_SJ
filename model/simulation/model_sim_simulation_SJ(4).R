@@ -527,7 +527,9 @@ run_sim <- function(i.r_ = i.r,
     if(k == -1) SC_amort[,] <- 0
     
     penSim[["i.r"]] <- i.r_[, as.character(k)]
- 
+    
+    fullFunding.first <- FALSE
+    
     source("functions.R")
     
     for (j in 1:nyear){
@@ -683,7 +685,7 @@ run_sim <- function(i.r_ = i.r,
     # UAAL(j)
     penSim$UAAL[j]    <- with(penSim, AL[j] - AA[j])
   
-      
+   
     
       #*************************************************************
       #   __Pre risk sharing: Amoritization costs               ####
@@ -712,9 +714,30 @@ run_sim <- function(i.r_ = i.r,
       
       
       # Amortize LG(j)
+    
+      if(penSim$UAAL[j] <= 0 & j == 1) { 
+        SC_amort[,] <- 0
+        fullFunding.first <- TRUE
+      }
+    
       if(j > ifelse(useAVamort, 1, 0)){
         # if useAVamort is TRUE, AV amort will be used for j = 1, not the one calcuated from the model.
-        if(amort_type == "closed") SC_amort[nrow.initAmort + j - 1, j:(j + m - 1)] <- amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method, skipY1 = FALSE)
+        # if(amort_type == "closed") SC_amort[nrow.initAmort + j - 1, j:(j + m - 1)] <- amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method, skipY1 = FALSE)
+        
+        
+        if(penSim$UAAL[j] <= 0 & !fullFunding.first & FR100_amort0){
+          
+          fullFunding.first <- TRUE
+          SC_amort[,] <- 0
+          
+          if(amort_type == "closed") SC_amort[nrow.initAmort + j - 1, j:(j + m - 1)] <- 
+                                        amort_LG(penSim$UAAL[j], i, m, salgrowth_amort, end = FALSE, method = amort_method, skipY1 = FALSE)
+         
+          } else {
+   
+          if(amort_type == "closed") SC_amort[nrow.initAmort + j - 1, j:(j + m - 1)] <- 
+                                        amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method, skipY1 = FALSE)
+         }
         }
       
       # Supplemental cost in j
@@ -725,6 +748,8 @@ run_sim <- function(i.r_ = i.r,
       
       
      
+      
+      
       
       
       

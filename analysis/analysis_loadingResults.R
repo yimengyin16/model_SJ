@@ -1,143 +1,100 @@
 
-
-## Tools #####
-
-
 #*******************************************************************************
 ##                            Loading data                                  ####
 #*******************************************************************************
 
 df_simNames <- 
-	tribble(
-		~simName,              ~label_benPolicy,
-		"pf.t1_baseline",        "",
-		"pf.t2_baseline",        "",
-		
-		"pf.t1_benCut1_lowERC",  "",
-		"pf.t2_benCut1_lowERC",  "",
-		
-		"pf.t1_colaCut1_lowERC", "",
-		"pf.t2_colaCut1_lowERC",  ""
-		)
+  read_excel(paste0(here::here(), "/model/RunControl.xlsx"), sheet = "SimsAnalysis") %>% 
+	filter(!is.na(sim_name), include)
 
 
-results_all <- 
-	map(df_simNames$simName, ~readRDS(paste0(dir_modelResults, "sim_", .x, ".rds"))$results) %>% 
-	bind_rows()
 
-results_all$sim_name %>% unique
+df_results <- 
+	map(df_simNames$sim_name, ~readRDS(paste0(here::here(), "/", dir_simResults , "sim_", .x, ".rds"))$results) %>% 
+	bind_rows() %>% 
+	left_join(df_simNames, by = "sim_name")
+
+# results_all$sim_name %>% unique
 
 
-# sim_slc <- 
-# 	map(df_simNames$simName[1], ~readRDS(paste0(dir_modelResults, "sim_", .x, ".rds"))$sim_slc) %>% 
-# 	bind_rows() %>% 
-# 	mutate(sim_original = sim,
-# 				 sim = sim_mod,
-# 				 sim_mod = NULL)
 
 
 
 #*******************************************************************************
-##                     Adjusting variable names for TCRS                    ####
+##              SJ plans: combining t1 and t2 for each policy               ####
 #*******************************************************************************
 
-results_all %>% names()
+## data frame for aggregate results
 
-results_all %<>% 
-	mutate(
-		FR_MA = 100* MA/AL,
-		FR_AA = 100* AA/AL,
-		C_PR  = 100* C/PR,
-		NC_PR = 100* C/PR,
+vars_agg <- c("AL", "UAAL", "MA", "AA", "NC", "SC", "ERC", "EEC", "PR")
+
+df_results_agg <-
+  df_results %>%
+  mutate(sim_name = str_replace(sim_name, ".t1|.t2", ".agg")) %>%
+  group_by(sim_name, sim, year) %>%
+  summarise(
+  	sim_name = sim_name[1],
+    AL = sum(AL),
+    MA = sum(MA),
+    AA = sum(AA),
+    UAAL = sum(UAAL),
+    NC = sum(NC),
+    SC = sum(SC),
+    ERC = sum(ERC),
+    EEC = sum(EEC),
+    PR  = sum(PR),
+    B   = sum(B),
+    POB_payment = sum(POB_payment),
+    i.r = i.r[1],
+  	plan = plan[1],
+  	policy = policy[1],
+  	ERCType = ERCType[1],
+    .groups = "drop"
+  ) %>%
+  mutate(
+
+        
+         tier = "Plan"
+         )
+
+
+df_results <-
+  bind_rows(df_results,
+            df_results_agg) %>%
+	mutate( 
+		ERC_pension = ERC,
+		ERC  = ERC_pension + POB_payment,
+		
+		FR_MA  = 100 * MA/AL,
 		ERC_PR = 100 * ERC/PR,
-    EEC_PR = 100 * EEC/PR,
-		ADC_PR        = ADC/PR) %>% 
-	relocate(sim, year)
-
-results_all %<>% 
-	mutate(NC.servRet_PR = 100 * NC.servRet/PR,
-				 NC.disbRet_PR = 100 * NC.disbRet/PR,
-				 NC.defrRet_PR = 100 * NC.defrRet/PR,
-				 NC.death_PR   = 100 * NC.death/PR,
-				 
-				 ALa.servRet_PR = AL.active.servRet/PR,
-				 ALa.disbRet_PR = AL.active.disbRet/PR,
-				 ALa.defrRet_PR = AL.active.defrRet/PR,
-				 ALa.death_PR   = AL.active.death/PR
-				 
-	)
+		EEC_PR = 100 * EEC/PR,
+		NC_PR  = 100 * NC/PR,
+		SC_PR  = 100 * SC/PR,
+		
+		NC.ER  =  NC - EEC,
+	  NC.ER_PR = 100 * (NC.ER)/PR) %>% 
+  # mutate(
+  #        #sim_name = str_replace(sim_name, "&", "_"),
+  #        sim_name_fct = factor(sim_name, levels = df_simNames$simName )
+  #        ) %>%
+  arrange(plan, tier, ERCType, policy,  sim, year)
 
 
+# df_results %>% filter(sim == 1, year == 2019)
 
+# df_results_agg %>% select(sim, year,  sim_name, policy_name) %>% 
+#   filter(sim == 1, year ==2018) %>% 
+#   group_by(policy_name) %>% 
+#   arrange(policy_name)
+# df_results$sim_name
 
-# Display1 Basic examination
-var_display1 <- c("sim_name", "val_name", "sim", "year", 
-									"AL", "FR_MA",  "UAAL", "ERC", "ERC_PR","EEC_PR", "NC",
-									"MA",
-									"AL", 
-									"AL.active", 
-									"AL.active.servRet",
-									"AL.active.disbRet",
-									"AL.nonactive",
-									"AL.defrRet",
-									"AL.servRet",
-									
-									"NC.servRet_PR",
-									"NC.disbRet_PR",
-									"NC.defrRet_PR",
-									"NC.death_PR",
-									
-									"ALa.servRet_PR",
-									"ALa.disbRet_PR",
-									"ALa.defrRet_PR",
-									"ALa.death_PR", 
-									
-									
-									"PVFB",
-									"PVFB.active.disbRet",
-									"PVFB.active.servRet",
-									"cola_actual",
-									"B",
-									"NC_PR",
-									"ERC_PR",
-									"EEC_PR",
-									# "ADC", 
-									"NC", "ERC", "EEC", "SC", "LG", "i.r", "PR",
-									"n_actives"
-)
-
-
-var_display2 <- c("sim_name", "val_name", "sim", "year", 
-									"FR_MA",  # "UAAL", "ERC", "ERC_PR","EEC_PR", "NC",
-									#"MA",
-									
-									"NC.servRet_PR",
-									"NC.disbRet_PR",
-									"NC.defrRet_PR",
-									"NC.death_PR",
-									
-									"ALa.servRet_PR",
-									"ALa.disbRet_PR",
-									"ALa.defrRet_PR",
-									"ALa.death_PR", 
-									
-									"PVFB.active",
-									"PVFB.nonactive",
-									#"PVFB.active.servRet",
-									"n_actives",
-									"cola_actual"
-)
-
-
-#results_all %>% filter(sim == 0)  %>% select(one_of(var_display2))  %>% print
-
-
-
-results_all %>% filter(sim == 0, year == 2019, str_detect(sim_name, "\\.t1"))  %>% select(one_of(var_display2))  %>% print
-
-results_all %>% filter(sim == 0, year == 2019, str_detect(sim_name, "\\.t2"))  %>% select(one_of(var_display2))  %>% print
-
-
+# df_results %>%
+# 	filter(sim_name %in%  c("all2t_baseline", 
+# 													"all2t_benCut1_lowERC", 
+# 													"all2t_colaCut1_lowERC",
+# 													"all2t_benCut1_colaCut1_lowERC"), 
+# 				 year %in% c(2018), sim == 0) %>%
+# 	select(sim_name, year, FR_MA,NC, NC.ER, SC, ERC, EEC_PR, UAAL, AL)
 
 
 

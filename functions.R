@@ -1,5 +1,36 @@
 
 
+
+
+
+
+get_CIB <- function(p, r, n){
+# Annual total payments 
+	
+#p <- 100
+#r <- 0.03
+#n <- 15
+
+# Payments for principal
+a1 <- p / (((1+r)^n - 1)/r)
+a <- a1 * (1+r)^((1:n)-1)
+# sum(a)
+
+# Payments for interests 
+int <- numeric(n)
+int <- (p - dplyr::lag(cumsum(a), 1, 0))*r
+
+# Total payments
+pmt <- a + int
+
+list(pmt_p = a, 
+		 pmt_i = int,
+		 pmt_tot = pmt)
+}
+
+get_CIB(100, 0.05, 20)
+
+
 ## Function for calculating PVB for retirees Modified 
 get_PVB_retiree <- function(age_fn, benefit_init, cola_assumed, dr_, decrement = df_decrement, age_max_ = max_age ) {
 	# calculates actuarial PV for given age, initial benefit, 

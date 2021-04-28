@@ -312,7 +312,7 @@ if(tier_name %in% "pf.t1"){
 		)
 	
 	
-	if(policyChg_type %in% c("general", "measureB") ){	
+	if(policyChg_type %in% c("general", "measureB", "sharedCost") ){	
 	liab_active %<>%   
 		mutate(
 			## CA rule reduction
@@ -391,7 +391,7 @@ if(tier_name %in% "pf.t1"){
 				TRUE ~ 0),
 		)
 	
-	if(policyChg_type %in% c("general", "measureB")){
+	if(policyChg_type %in% c("general", "measureB", "sharedCost")){
 		
 		liab_active %<>%
 		mutate(
@@ -478,7 +478,7 @@ if(tier_name %in% "pf.t2"){
 			bfactor_vec = ifelse(yos  == 0, 0, bfactor_vec),
 		)
 		
-	if(policyChg_type %in% c("general", "measureB") ){	
+	if(policyChg_type %in% c("general", "measureB", "sharedCost") ){	
 		liab_active %<>%   
 			mutate(	
 			
