@@ -43,10 +43,6 @@ $~$
 
 # **Updates**
 
-## What's new 
-
-
-
 ## Future updates
 
 
@@ -56,7 +52,6 @@ $~$
 
 
 # **Overview**
-
 
 ## Policy scenarios
 We have modeled each group under current policy and under three types of alternative policies, each with several variants differing in the degree that benefits are affected:
@@ -91,19 +86,6 @@ The policies with greater benefit reductions help define bounds, and the policie
 Additional variants that we may explore in the future: (1) providing lesser reductions for older retirees or workers who are close to retirement, (2) apply only to new hires. These variants would provide lower fiscal savings and greater protection to plan
 members.
 
-## Assumptions on how the San Jose government would respond 
-We examined these policies under two assumptions about how California governments would respond:
-
-1. Assumption A: Take the savings now, in lower contributions: All policies reduce actuarial
-liability, unfunded liability, and normal cost. Lower normal cost and amortization cost reduce
-the actuarially determined contribution (ADC). Under this assumption employers pay just the ADC,
-which would be lower than what they pay now.
-
-2. Assumption B: Maintain employer contributions despite the ADC reduction: Even though the ADC is
-lower, employers pay the ADC plus an additional contribution to keep their payments near
-where they were before, reducing unfunded liability more quickly than otherwise. However, this
-can interact with the contingent COLA: if full funding is reached sooner, then benefit payments
-will go up as the COLA is put back into effect.
 
 
 ## Investment return scenarios
@@ -126,13 +108,6 @@ stochastic return scenario in a later iteration.
 
 
 # **Preliminary results**
-
-Notes:
-
-- For tier 2, the pre-1999 policy change has minimal impact on the NC of tier 2
-
-- For measure B, 1.5% assumed COLA for valuation may be too low. Funded ratio is expected to rise above 100% in 4-6 years. Just keep the COLA assumption and just allow for cost reduction through actuarial gains?
-
 
 
 ```{r funSummaryDetail, include=FALSE}
@@ -255,7 +230,6 @@ df_fig_det %>%
 	scale_y_continuous(breaks = c(seq(0, 200, 5))) + 
 	scale_color_manual(values =  colors_manual) +
 		theme(legend.position = "bottom")
-
 
 
 
@@ -636,8 +610,7 @@ df_PVC_30y <- get_PVC(df_results, 32, dr = dr)
 df_PVC_40y <- get_PVC(df_results, 42, dr = dr)
 df_PVC_20y <- get_PVC(df_results, 20, dr = dr)
 
-df_PVC_30y
-
+df_PVC_20y
 
 
 df_PVC_20y %>% 
@@ -686,15 +659,17 @@ df_C1
 df_C2 <- 
   df_results %>% 
 	as_tibble() %>% 
+	mutate(FR_AA = 100*AA/AL) %>% 
 	filter(sim %in% c(0, -2), year %in% c(2019, 2028), str_detect(sim_name, "agg"), !str_detect(sim_name, "highERC") ) %>% 
-	select(sim_name, sim, year, ERC, UAAL, ERC_PR, FR_MA) %>% 
+	select(sim_name, sim, year, ERC, UAAL, ERC_PR, FR_AA) %>% 
 	arrange(desc(sim), year, sim_name) %>% 
 	mutate(across(c(ERC, UAAL), ~ .x/1e6)) %>% 
 	gather(Var, value, -sim_name, -sim,-year) %>% 
 	mutate(Var = factor(Var) %>% fct_inorder()) %>% 
 	arrange(desc(sim), year, Var) %>% 
 	unite("Var", c(year,Var)) %>% 
-	mutate(Var = factor(Var),
+	mutate(Var = paste0("y", Var),
+		     Var = factor(Var),
 				 Var = fct_inorder(Var)) %>% 
 	spread(Var, value) %>% 
 		arrange(desc(sim), sim_name) 
@@ -703,7 +678,7 @@ df_C2 <-
 df_rowNames <- 
 	tribble(
 	~sim_name, ~sim_label,
-	"pf.agg_baseline",     "Baseline: \ncurrent policy",
+	"pf.agg_baseline",     "Baseline: \ncurrent policy ($million)",
 	"pf.agg_POB",          "POB of 100% UAAL",
 	"pf.agg_pre99_lowERC", "Pre-1999 benefit",
 	"pf.agg_sharedCost",   "Cost-sharing policy",
@@ -724,9 +699,83 @@ df_sumTbl %>%
 	fmt_number(columns = 3:12,decimals = 1
 							)
 
+df_sumTbl_chg <- 
+  df_sumTbl %>% 
+	group_by(sim) %>% 
+	mutate(across(matches(c("ERC$","UAAL", "ERC_PV", "EEC_PV")), ~ ifelse(row_number() == 1, .x, (.x - .x[row_number() == 1])/.x[row_number() == 1]) )) %>% 
+  mutate(across(matches(c("ERC_PR", "FR_AA")), ~ ifelse(row_number() == 1, .x, .x - .x[row_number() == 1]))) %>% 
+	mutate(sim = factor(sim, levels = c(0, -2), labels = c("Assumption met (constant 6.75% annual return)", "Asset shock")))
 
 
 
+
+df_sumTbl_chg1 <- 
+	df_sumTbl_chg %>% 
+	select(!matches(c("ERC_PR", "FR_AA"))) 
+
+df_sumTbl_chg1 %>%  
+  gt %>% 
+	cols_label(
+		sim_name = "",
+		y2019_ERC = "Employer contribution",
+		y2028_ERC = "Employer contribution",
+		y2019_UAAL = "UAAL",
+		y2028_UAAL = "UAAL",
+		ERC_PV = "Employer contribution",
+		EEC_PV = "Employee contribution"
+
+	) %>% 
+	tab_spanner(
+    label = "2019",
+    columns = c("y2019_ERC", "y2019_UAAL")
+    ) %>% 
+	tab_spanner(
+    label = "2028",
+    columns = c("y2028_ERC", "y2028_UAAL")
+    ) %>% 
+	tab_spanner(
+    label = "Total present value over 20 years (2019-2038)",
+    columns = c("ERC_PV", "EEC_PV")
+    ) %>% 
+	cols_width(
+    "sim_name" ~ px(180),
+    vars(ERC_PV, EEC_PV) ~ px(120),
+    everything() ~ px(110)
+  ) %>% 
+	cols_align(
+    align = "left",
+    columns = vars(sim_name)
+  ) %>% 
+	
+	fmt_number(
+		rows = c(1,5),
+		columns = 2:8,
+		decimals = 1
+	) %>% 
+		fmt_percent(
+		rows = c(2:4,6:8),
+		columns = 2:8,
+		decimals = 1
+	) %>% 
+	tab_header(
+    title = md("Estimated impacts on contributions and UAAL of selected policy alternatives"),
+    subtitle = md("% changes are relative to baseline (current policy)")
+    
+  ) %>% 
+	tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_row_groups()
+	 ) %>% 
+ tab_footnote(
+    footnote = "All existing amortization basis in 2019 are expected to be paid off by 2038; present values are calculated with an annual discount rate of 6.75%.",
+    locations = cells_column_spanners(
+     "Total present value over 20 years (2019-2038)"
+    )
+ )
+
+cells_s
 
 
 ```

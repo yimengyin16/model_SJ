@@ -3,6 +3,8 @@
 ##                            Loading data                                  ####
 #*******************************************************************************
 
+invisible(gc())
+
 df_simNames <- 
   read_excel(paste0(here::here(), "/model/RunControl.xlsx"), sheet = "SimsAnalysis") %>% 
 	filter(!is.na(sim_name), include)
@@ -45,6 +47,7 @@ df_results_agg <-
     PR  = sum(PR),
     B   = sum(B),
     POB_payment = sum(POB_payment),
+  	POB_debt    = sum(POB_debt),
     i.r = i.r[1],
   	plan = plan[1],
   	policy = policy[1],
