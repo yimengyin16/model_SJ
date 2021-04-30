@@ -273,6 +273,16 @@ for (tierName in names(ls_tierData)){
 }
 
 
+#*******************************************************************************
+#  Save decrements          ####
+#*******************************************************************************
+salary_full <- list()
+
+for (tierName in names(ls_tierData)){
+  salary_full[[tierName]] <- ls_tierData[[tierName]]$salary_full
+}
+
+
 
 #*******************************************************************************
 #  Save outputs          ####
@@ -286,6 +296,7 @@ saveRDS(
       pop = pop,
       init_amort_raw = init_amort_raw_val,
       decrements = decrements,
+      salary_full = salary_full,
       init_unrecReturns.unadj = init_unrecReturns.unadj_val
     ),
   file = paste0(dir_outputs_val, "val_", val_name_run, ".rds")

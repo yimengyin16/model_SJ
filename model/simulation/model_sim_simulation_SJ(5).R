@@ -478,7 +478,7 @@ run_sim <- function(i.r_ = i.r,
   # 3. In the simulation, 
   #     - the amount of POB will be added to year year 1 MA and AA. 
   #       adding POB to MA and AA does not affect the schedule of asset smoothing.
-  #     - POB payment in [j] will be deducted in the calculation of MA[j+1]
+
   
   POB_issuance <- 0
   POB_payments <- numeric(nyear + na2zero(POB_period))
