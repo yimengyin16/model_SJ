@@ -809,7 +809,7 @@ fig_NC_PR_shock
 
 Representative members to examine:
   
-  - Tier 1 service retiree at age 60 in 2020
+  - Tier 1 service retiree at age 55 in 2020
 
   - Late-career tier 1 active member at age 50 in 2020
 
@@ -817,7 +817,7 @@ Representative members to examine:
 
   - Early-career tier 2 active member at age 25 in 2020
   
-We assume all members above entered the plan at age 25 and retire at age 60 with 35 years of service. 
+We assume all members above entered the plan at age 25 and retire at age 55 with 30 years of service. 
 
 
 
@@ -850,7 +850,7 @@ colors_ERC <- c("grey30",  brewer_pal(type = "qual", palette = "Paired")(2)[2],
 df_cohort.labels <- 
 	tribble(
 	~cohort, ~labels,
-	"pf_t1_1990_25_55", "Tier 1 retiree\ncurrent age 60",
+	"pf_t1_1990_25_55", "Tier 1 retiree\ncurrent age 55",
 	"pf_t1_1995_25_55", "Tier 1 active\ncurrent age 50",
 	"pf_t1_2010_25_55", "Tier 1 active\ncurrent age 35",
 	"pf_t2_2020_25_55", "Tier 2 active\ncurrent age 25"
@@ -1100,7 +1100,7 @@ df_ben_sum %>%
 
 ## Bar plot for PV
 
-caption_cohort <- c("Note: all members entered the plan at age 25 and retire at age 60 with 35 years of service")
+caption_cohort <- c("Note: all members entered the plan at age 25 and retire at age 55 with 30 years of service")
 
 
 fig_benPV <- 
