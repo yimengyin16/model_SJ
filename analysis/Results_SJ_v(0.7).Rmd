@@ -1156,6 +1156,10 @@ fig_ben80 <-
 			  caption = caption_cohort)
 
 
+fig_ben55$data
+
+fig_ben80$data
+
 ```
 
 ```{r include=FALSE}
@@ -1257,6 +1261,8 @@ fig_EECIndiv <-
 			 y = "Total employee contribution as % of total salary",
 			  caption = caption_cohort)
 	
+
+fig_EECIndiv$data 
 
 
 # # EEC in 2020 dollar
