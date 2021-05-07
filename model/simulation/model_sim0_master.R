@@ -133,9 +133,13 @@ var_display2 <- c("sim_name", "val_name", "sim", "year",
                   
                   "PVFB.active",
                   "PVFB.nonactive",
+                  "PVFBa_PR",
+                  "PVFBna_PR",
                   #"PVFB.active.servRet",
+                  "AL_PVFB", 
                   "n_actives",
-                  "cola_actual"
+                  "cola_actual",
+                  "PR"
 )
 
 
@@ -160,11 +164,14 @@ penSim_results %<>%
          ALa.disbRet_PR = AL.active.disbRet/PR,
          ALa.defrRet_PR = AL.active.defrRet/PR,
          ALa.death_PR   = AL.active.death/PR,
-         EEC.SC_PR = 100*EEC.SC/PR
+         PVFBa_PR   = PVFB.active/PR,
+         PVFBna_PR   = PVFB.nonactive/PR,
+         EEC.SC_PR = 100*EEC.SC/PR,
+         AL_PVFB   = 100*AL.active / PVFB.active
          )
 
 
-penSim_results %>% filter(sim == -1)  %>% select(one_of(var_display1))%>% print
+penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display1))%>% print
 # mutate(EEC.SC_PR_chg = EEC.SC_PR - lag(EEC.SC_PR) ) 
 # penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
 # penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print

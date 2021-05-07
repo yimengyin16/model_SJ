@@ -187,9 +187,9 @@ range_ea  <- 20:64  # max retirement age is assumed to be 65 (qxr = 1 at age 65 
 tier_name <- "fc.t2"
 age_vben  <- 55 # 50 if yos >= 25, 55 if yos < 25. assume 55 for all in the model
 v.year    <- 0
-fasyears  <- 1  
+fasyears  <- 3  
 # bfactor   <- 0.02
-cola_assumed <- 0.03 # assumed cola rates for valuation  
+cola_assumed <- 0.0175 # assumed cola rates for valuation  
 # EEC_rate <- 0.0735 # use EEC and ERC caps 
 
 
@@ -319,7 +319,7 @@ df_qxt_tier <-
 
 # Truncated at age 100
 
-ls_pub2010_raw <- readRDS(paste0(dir_inputs, "pub2010_raw.rds"))
+ls_pub2010_raw <- readRDS(paste0(dir_data, "pub2010_raw.rds"))
 
 #ls_pub2010_raw$pubG2010 %>% names
 
