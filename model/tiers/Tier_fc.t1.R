@@ -165,7 +165,7 @@ dir_outputs <- "model/tiers/tierData/"
 
 # Model settings
 range_age <- 20:100
-range_ea  <- 20:64  # max retirement age is assumed to be 65 (qxr = 1 at age 65 in AV tables) 
+range_ea  <- 20:69  
 
 
 
@@ -305,7 +305,7 @@ df_qxt_tier <-
 
 # Truncated at age 100
 
-ls_pub2010_raw <- readRDS(paste0(dir_inputs, "pub2010_raw.rds"))
+ls_pub2010_raw <- readRDS(paste0(dir_data, "pub2010_raw.rds"))
 
 #ls_pub2010_raw$pubG2010 %>% names
 
@@ -674,7 +674,9 @@ tier_params <-
     fasyears  = fasyears,  
     cola_assumed = cola_assumed,
     share_male   = share_male,
-    share_female = share_female
+    share_female = share_female,
+    range_age  = range_age,
+    range_ea   = range_ea
     #bfactor = bfactor
     #EEC_rate = EEC_rate
   )

@@ -3,8 +3,8 @@
 # Valuation name
 # rm(list = ls())
 
-#sim_name_run <- "Dev_pf.t1"
-#sim_paramlist <- filter(sim_runList, sim_name == sim_name_run) %>% as.list
+# sim_name_run <- "Dev_fc.t2"
+# sim_paramlist <- filter(sim_runList, sim_name == sim_name_run) %>% as.list
 
 
 cat("Running simulation", sim_paramlist$sim_name, "\n")
@@ -164,7 +164,7 @@ penSim_results %<>%
          )
 
 
-penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display1))%>% print
+penSim_results %>% filter(sim == -1)  %>% select(one_of(var_display1))%>% print
 # mutate(EEC.SC_PR_chg = EEC.SC_PR - lag(EEC.SC_PR) ) 
 # penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
 # penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print

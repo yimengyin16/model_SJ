@@ -18,7 +18,9 @@ filePath_runControl <- paste0(dir_runControl, fn_runControl)
 dir_planInfo <- "inputs/data_proc/"
 filePath_planInfo <- paste0(dir_planInfo, "Data_SJPF_planInfo_AV2019.RData")
 
-# Output folder  
+filePath_planInfo_fc <- paste0(dir_planInfo, "Data_SJFC_planInfo_AV2020.RData")
+
+# Output folder   
 dir_outputs_val <- "model/valuation/outputs_val/"
 
 

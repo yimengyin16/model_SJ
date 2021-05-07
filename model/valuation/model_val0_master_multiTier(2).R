@@ -39,8 +39,11 @@ val_paramlist <- read_excel(filePath_runControl, sheet="params_val", skip  = 3) 
 ## Additinal global variables 
 
 # age and entry age ranges
-Global_paramlist$range_age <- with(Global_paramlist, min_age:max_age)
-Global_paramlist$range_ea  <- with(Global_paramlist, min_ea:max_ea)
+# Global_paramlist$range_age <- with(Global_paramlist, min_age:max_age)
+# Global_paramlist$range_ea  <- with(Global_paramlist, min_ea:max_ea)
+
+val_paramlist$range_age <- with(val_paramlist, min_age:max_age)
+val_paramlist$range_ea  <- with(val_paramlist, min_ea:max_ea)
 
 
 # turn tier names into a character vector
@@ -62,7 +65,7 @@ for (tierName in val_paramlist$tier_include){
          readRDS(paste0(dir_tierData, "tierData_", tierName,  ".rds" ))
   }
 
-# ls_tierData$
+# ls_tierData$fc.t1
 
 
 #*******************************************************************************
@@ -77,7 +80,7 @@ source("model/valuation/model_val_prepDataFuns.R", local = TRUE)
 for (tierName in names(ls_tierData)){
   
   # dev --
-  # tierName <- "pf.t1"
+  # tierName <- "fc.t1"
   # dev --
   
   ls_tierData[[tierName]] <- adj_tierParams(ls_tierData[[tierName]])
@@ -113,8 +116,8 @@ for (tierName in names(ls_tierData)){
 }
 
 
-# ls_tierData$pf.t1$decrements_expanded %>% 
-#   mutate(start_year = year - (age - ea)) %>% 
+# ls_tierData$fc.t1$decrements_expanded %>%
+#   mutate(start_year = year - (age - ea)) %>%
 #   arrange(start_year,ea)
 # 
 # ls_tierData$pf.t1$decrements <- NULL
@@ -147,7 +150,7 @@ pop <- get_demographics(ls_tierData)
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_indivLiab_flexbf(6).R", local = TRUE)
+source("model/valuation/model_val_indivLiab_flexbf(7).R", local = TRUE)
 
 indivLiab <- list()
 
@@ -235,7 +238,9 @@ aggLiab$sumTiers <-
 #    plan information associated with this valuation        ####
 #*******************************************************************************
 
-load(filePath_planInfo)   %>% print
+if(str_detect(val_paramlist$val_name, ".fc")) load(filePath_planInfo_fc) %>% print
+
+if(str_detect(val_paramlist$val_name, ".pf")) load(filePath_planInfo) %>% print
 
 
 init_amort_raw_val <- list()
@@ -246,7 +251,10 @@ for (tierName in names(ls_tierData)){
   init_amort_include <- 
     case_when(
       tierName %in% "pf.t1" ~  c("pf.t1.fire", "pf.t1.police"),
-      tierName %in% "pf.t2" ~  c("pf.t2.fire", "pf.t2.police")
+      tierName %in% "pf.t2" ~  c("pf.t2.fire", "pf.t2.police"),
+      tierName %in% "fc.t1" ~  c("t1"),
+      tierName %in% "fc.t2" ~  c("t2"),
+      TRUE ~                   NA_character_
       )
   
   init_amort_raw_val[[tierName]] <- 
