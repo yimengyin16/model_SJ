@@ -238,9 +238,9 @@ aggLiab$sumTiers <-
 #    plan information associated with this valuation        ####
 #*******************************************************************************
 
-if(str_detect(val_paramlist$val_name, ".fc")) load(filePath_planInfo_fc) %>% print
+if(str_detect(val_paramlist$val_name, "fc")) load(filePath_planInfo_fc) %>% print
 
-if(str_detect(val_paramlist$val_name, ".pf")) load(filePath_planInfo) %>% print
+if(str_detect(val_paramlist$val_name, "pf")) load(filePath_planInfo) %>% print
 
 
 init_amort_raw_val <- list()

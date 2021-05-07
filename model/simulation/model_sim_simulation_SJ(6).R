@@ -920,7 +920,9 @@ run_sim <- function(i.r_ = i.r,
         penSim$EEC[j] <- penSim$EEC.NC[j] + penSim$EEC.SC[j] 
         penSim$EEC[j] <- max( penSim$EEC[j], penSim$NC[j] * EEC_floorNCshare)
         
-        penSim$ERC[j] <- with(penSim, max(0, ADC[j] - EEC[j]))
+        penSim$ERC[j] <- with(penSim, max(na2zero(ERC_floorNCshare * PR[j]), ADC[j] - EEC[j]))
+        
+        
          
         # penSim$ADC[j] <- with(penSim, max(0, NC[j] + SC[j])) 
         # 

@@ -40,11 +40,22 @@ adj_tierParams <- function(tierData,
   }
   
   
+  if(str_detect(tierData$tier_name, "t1")){
+    if(!is.na(val_paramlist_$fasyears_override_t1)){
+      tierData$tier_params$fasyears <- val_paramlist_$fasyears_override_t1
+    }
+  }
+  
+  
   if(str_detect(tierData$tier_name, "t2")){
     if(!is.na(val_paramlist_$cola_assumed_override_t2)){
       tierData$tier_params$cola_assumed <- val_paramlist_$cola_assumed_override_t2
     }
   }
+  
+  
+  
+  
   
   return(tierData)
 }
