@@ -1,4 +1,4 @@
-# Constructing tier SJPF tier 2
+# Constructing tier SJFC tier 2
 
 
 
@@ -7,8 +7,8 @@
 #*******************************************************************************
 
 #' Inputs:
-#'   - inputs/data_proc/Data_SFPF_decrements_AV2019_imputed.RData
-#'   - inputs/data_proc/Data_SFPF_demographics_2019630_fillin.RData
+#'   - inputs/data_proc/Data_SFFC_decrements_AV2020_imputed.RData
+#'   - inputs/data_proc/Data_SFFC_demographics_2020630_fillin.RData
 
 
 #' What this file does
@@ -20,16 +20,16 @@
 
 
 #*******************************************************************************
-#*******************************************************************************
 #                               Tier specification  ####
-# Source: AV2019, ep63
+#*******************************************************************************
+
 
 
 ##' Members included 
-#'  - SJPF tier 2 members
-#'     - Police: hired on or after Aug 4, 2013
-#'     - Fire  : hired on or after Jan 2, 2015
+#'  - SJFC tier 2 members
+#'     - Police: hired after Sep 30, 2012
 #'     
+#'  How to allocate total active and retiree numbers to tier 1 and tier 2
 
 
 ###' Service retirement 
@@ -39,133 +39,130 @@
 #'      
 #'    
 #   - Eligibility for unreduced benefits
-#'       - age 57 & yos 5
+#'       - age 62 & yos 5
+#'       
+#'   - Eligibility for reduced benefits
+#'       - age 55 & yos 5
 #'
-#'  - Eligibility for reduced benefits
-#'      - age 50 & yos 5
-#'      - reduction: 7% per year before age 57
 #'      
 #'  - Vesting: 
-#'       - 5 years?
+#'       - 5
 #'  
 #'  
 #'  - Final compensation (FAS) 
 #'      - The plan policy
-#'        - 36 highest consecutive months, with anti-spike measures. 
+#'        - 3 years 
 #'      - Model:
-#'        - 3 year
+#'        - 3 yeas
 #'  
 #'  
 #'  - Benefit formula
-#'      - Police and fire: 
-#'          - yos in 1-20: 2.4% per year
-#'          - yos in 21-25: 3% per year
-#'          - yos of 26 and up: 3.4% per year 
-#'          - Max of 80% of FAS 
-#'      - survivor: 50% joint and survivor annuity    
+#'       - 2%
+#'       - Max of 70% of FAS 
 
 
 
 
 ###' Deferred retirement  
 #' - Plan  policy:
-#'   - YOS <  5: accumulated EEC with interest 
-#'   - YOS >= 5: servRet benefit, actuarially reduced for early retirment, 
-#'               payable when eligibility is reached 
+#'   - YOS < 5: Lump sum EEC with interests (int rate? 2% as in P&F?)
+#'   - YOS >= 5, service retirement benefit, payable upon eligibility; reduced for early retirement.
+#'   
 #' 
 #  - Model: 
-#'   - Simplification: 
+#'   - Simplification: reduced defrRet benefit for YOS < 5
+#'   - for now reduce benefit by 50% if yos < 5
+#'   - assumed to start receiving benefit at age 55 (early reduction applied)
 
 
+
+## Disability: 45% assumed to be duty related, 55% non-duty related
+##  - weighted average of the two types
 
 ###' Disability retirement, service connected
 #' 
 #'  - Plan policy:
 #'     - no age/yos requirement
-#'     - Greater of:
-#'        -  50% of FAS
-#'        -  service retirement, if eligible for service retirement
-#'        -  actuarial reduced retirement benefit from age 50, if not eligible for servRet
-#'        
+#'     - 2% per yos. min 40%, max 70% FAS
+#'     - with reductions
+#  
 #   - Model:
-#'     - only the first 2: max of 50% of fas and servRet benefit 
+#'     - 
 
 
 ###' Disability retirement, non-service connected
-#'   - not modeled b/c all disabilities are assumed to be duty related in the AV 
+#'   - YOS>=5
+#'   - 2% per yos. min 20%, max 70% FAS
+#'   - with reductions
+#'   
+#'   - Model: 
 
 
-
-# Death benefit: 
-#'   - YOS>= 2 and before servRet eligibility
-#'        - 24% of FAS + 0.75% for each yos in excess of 2, up to 37.5% of FAS
-#'   - after servRet eligibility
-#'        - servRet
-#'   - death in the line of duty
-#'        - greater of 
-#'          - 37.5% of FAS
-#'          - 50% of servRet
-
+# Death benefit: service connected
+#'   - YOS < 5: Lump-sum: EECs and interest, 1 month of salary for each yos, up to 6 years
+#'   - yos >=5: 2.5% per yos, min 40% and max 70% of FAS
+#'   
+#'   - model: to simplify as lump-sum
 
 
 # COLA:
-#   - Policy: CPI-U for SJ, subject to a cap of 2%.  
-#   - model: 2%
+#   - Policy: 
+#     - yos 1~10 : 1.25%
+#     - yos 11-20: 1.50%
+#     - yos 21-25: 1.75%
+#     - yos 26+:   2.00%
+
 
 
 ###' Member contribution
-#    - 50% of total Tier 2 contributions (NC + SC + admin)
-#    - Increases in UAAL contribution are limited to 1/3 % of compensation each year
-#    - contribution >= 50% of NC
+#   - Tier2: 
+#       - Member:
+#         - 50% of ADC,
+#         - UAL contribution rate increase  capped at 0.33% of pay each year,      -          
+#         - EEC rate cannot be less than 50% of normal cost rate
+#       - City:
+#         - Cannot be less than 50% of NC
+
+
+
+
 
 
 
 ## Assumptions, needs to be revisited 
 
 
-#' Shares of police and fire members
-#' Source: AV2019 ep43
-#'  - police: 541 / 1215
-#'  - fire: 674/1215
-
-share_fire   <- 541/1215 # 44.5%
-share_police <- 1 - share_fire  
-
 # gender ratio:
 # - No gender ratio provided in AV and CAFR, 
-#   - Assumption: 10% female and 90% male
-share_male <- 0.9
+#   - Assumption: 55% female and 45% male
+share_male <- 0.45
 share_female <- 1 - share_male
 
 
 ## Assumptions on demographics 
 
-#'  - SJPF tier 1 members
-#'     - Police: hired before Aug 4, 2013
-#'     - Fire  : hired before Jan 2, 2015
+#'  - SJFC tier 2 members
+#'     - Police: hired after Sep 30, 2012
 #'     
 #'  How to allocate total active and retiree numbers to tier 1 and tier 2
 
 
 # t1 and t2 mebmers:
 #  Active members:
-#   - According to AV2019 ep 43, there are 486 tier 2 members
-#   - In AV2019 demographic data, the number of actives with yos <= 4 is 478
-#   - For now, use yos <= 4 as tier 2 members
-#   - In theory, some tier 2 police members should have yos = 5 (5 11/12). Should 
-#     keep this in mind. 
+#   - According to AV2020 ep 46, there are 2215 tier 2 members
+#   - For now, use yos <= 7 as tier 2 members (in theory, only a portion of memebers with yos == 7)
+#   - in the imputed data, there are 2169 members (2.1% lower)
+#   
 #
 #
 #  Serivice retirees for regular members
-#    - According to AV2019 ep 52, there are no any type of retirees in tier 2
+#    - number should be very small for tier 2 (2 retired in 2020)
 #
 #
 #  Initial terminated members
 #   - For now, we assume that for each tier the liability of initial terminated members(in or not in pay status) 
 #     is a fixed percentage of the AL of retirees. 
-#   - As we assume the tier 2 has no retirees in the model, there are no AL for initial terminated members 
-#     under the current simplification method. The should not be an issue because the actual AL for termianted should be 
-#     very small as tier 2 is still new. 
+#   - there are 230 vested terms in tier 2, should think about how to model them 
 
 
 
@@ -187,12 +184,12 @@ range_ea  <- 20:64  # max retirement age is assumed to be 65 (qxr = 1 at age 65 
 
 
 # Tier specific parameters
-tier_name <- "pf.t2"
-age_vben  <- 60 # AV2019 ep60, at age 60 for Tier 2 vested members
-v.year    <- 5
-fasyears  <- 3  
+tier_name <- "fc.t2"
+age_vben  <- 55 # 50 if yos >= 25, 55 if yos < 25. assume 55 for all in the model
+v.year    <- 0
+fasyears  <- 1  
 # bfactor   <- 0.02
-cola_assumed <- 0.02 # assumed cola rates for valuation  
+cola_assumed <- 0.03 # assumed cola rates for valuation  
 # EEC_rate <- 0.0735 # use EEC and ERC caps 
 
 
@@ -200,13 +197,30 @@ cola_assumed <- 0.02 # assumed cola rates for valuation
 #                      ## Loading data  ####
 #*******************************************************************************
 
-load(paste0(dir_data, "Data_SJPF_decrements_AV2019_imputed.RData"))
-load(paste0(dir_data, "Data_SJPF_demographics_20190630_fillin.RData"))
-df_mp2019_raw <- readRDS(paste0(dir_data, "MP2019_raw.rds"))
+load(paste0(dir_data, "Data_SJFC_decrements_AV2020_imputed.RData"))
+load(paste0(dir_data, "Data_SJFC_demographics_20200630_fillin.RData"))
+df_mp2020_raw <- readRDS(paste0(dir_data, "MP2020_raw.rds"))
 
+# Data loaded:
 
+## Decrements:
+# df_qxr_regular_imputed
+# df_qxr_special_imputed
+# df_qxd_imputed
+# df_qxt_imputed
+# df_qxm.pre_imputed
+# df_qxm.post_imputed
+# df_qxmd_imputed
+# df_salScale_imputed
 
+## Member data
+# df_nactives_fillin
+# df_n_servRet_fillin
+# df_n_disbRet_occ_fillin
+# df_n_disbRet_nonocc_fillin
+# df_n_beneficiaries_fillin
 
+# df_nactives_fillin %>% filter(yos<= 7) %>% pull(nactives) %>% sum
 
 #*******************************************************************************
 #                      ## Decrements 1: combining groups ####
@@ -216,13 +230,12 @@ df_mp2019_raw <- readRDS(paste0(dir_data, "MP2019_raw.rds"))
 
 # groups included
 grp_include <- df_qxr_imputed$grp %>% unique
-grp_include <- grp_include[str_detect(grp_include , "t2.police|t2.fire")]
+grp_include <- grp_include[str_detect(grp_include , "t2")]
 
 # weight for each group
 wgts <- tibble(grp = grp_include, wgt = 0)
 
-wgts[wgts$grp == "t2.police","wgt"] <-  share_police
-wgts[wgts$grp == "t2.fire","wgt"]   <-  share_fire
+wgts[wgts$grp == "t2","wgt"] <-  1
 
 
 ## calculate weighted average
@@ -241,14 +254,13 @@ df_qxr_tier <-
 ## Disability retirement rates
 
 # groups included
-grp_include <- df_qxd_imputed$grp %>% unique
-grp_include <- grp_include[str_detect(grp_include, "police|fire")]
+grp_include <- "t2" # df_qxd_imputed$grp %>% unique
+grp_include <- grp_include[str_detect(grp_include, "t2")]
 
 # weight for each group
 wgts <- tibble(grp = grp_include, wgt = 0)
 
-wgts[wgts$grp == "police","wgt"] <-  share_police
-wgts[wgts$grp == "fire",  "wgt"] <-  share_fire
+wgts[wgts$grp == "t2","wgt"] <-  1
 
 
 
@@ -256,6 +268,7 @@ wgts[wgts$grp == "fire",  "wgt"] <-  share_fire
 # Need to combine two types of disability rates: adding the two rates
 df_qxd_tier <- 
   df_qxd_imputed %>% 
+  mutate(grp = "t2") %>% 
   filter(grp %in% grp_include) %>% 
   left_join(wgts, by = "grp") %>% 
   group_by(age) %>% 
@@ -269,20 +282,20 @@ df_qxd_tier <-
 ## Termination with refund
 
 # groups included
-grp_include <- df_qxt_imputed$grp %>% unique
-grp_include <- grp_include[str_detect(grp_include, "police|fire")]
+grp_include <- "t2" #df_qxt_imputed$grp %>% unique
+grp_include <- grp_include[str_detect(grp_include, "t2")]
 
 # weight for each group
 wgts <- tibble(grp = grp_include, wgt = 0)
 
-wgts[wgts$grp == "police","wgt"] <-  share_police
-wgts[wgts$grp == "fire",  "wgt"] <-  share_fire
+wgts[wgts$grp == "t2","wgt"] <-  1
 
 
 
 ## calculate weighted average
 df_qxt_tier <- 
   df_qxt_imputed %>% 
+  mutate(grp = "t2") %>% 
   filter(grp %in% grp_include) %>% 
   left_join(wgts, by = "grp") %>% 
   group_by(yos) %>% 
@@ -294,59 +307,57 @@ df_qxt_tier <-
   ungroup()
 
 
-
-
 ##  Mortality
-#   Based on SOA pub 2010 decrement table
 
+#' Healthy non-annuitant:
+#'   - PubG 2010, healthy employees
+#' Healthy retirees: 
+#'   - PubG 2010, healthy retirees
+#' Disabled retirees: 
+#'   - CalPERS 2009 ordinary disability mortality
+#'   - use pubG 2010, disabled retiree as placeholder 
 
+# Truncated at age 100
 
+ls_pub2010_raw <- readRDS(paste0(dir_inputs, "pub2010_raw.rds"))
 
-ls_pub2010_raw <- readRDS(paste0(dir_data, "pub2010_raw.rds"))
+#ls_pub2010_raw$pubG2010 %>% names
 
 df_qxm_tier <- 
-  left_join(
-    ls_pub2010_raw$pubS2010A %>% 
-      select(age,
-             qxm.pre_female   = qxm.employee.female,
-             qxm.pre_male     = qxm.employee.male,
-             qxm.post_female  = qxm.healthyRet.female,
-             qxm.post_male    = qxm.healthyRet.male),
-    
-    ls_pub2010_raw$pubS2010 %>% 
-      select(age,
-             qxmd.post_female  = qxm.disbRet.female,
-             qxmd.post_male    = qxm.disbRet.male),
-    
-    by = "age"
-  ) %>% 
-  filter(age <= 100)
+  ls_pub2010_raw$pubG2010 %>% 
+  select(age,
+         qxm.pre_female   = qxm.employee.female,
+         qxm.pre_male     = qxm.employee.male, 
+         qxm.post_female  = qxm.healthyRet.female,
+         qxm.post_male    = qxm.healthyRet.male,
+         qxmd.post_female  = qxm.disbRet.female,
+         qxmd.post_male    = qxm.disbRet.male) %>% 
+  filter(age <= 100) 
 
 
 df_qxm_tier %<>% 
   mutate(
-    qxm.pre_female   = 0.979 * qxm.pre_female,
-    qxm.pre_male     = 0.979 * qxm.pre_male ,
-    qxm.post_female  = 1.002 * qxm.post_female,
-    qxm.post_male    = 1.002 * qxm.post_male,
-    qxmd.post_female = 0.915 * qxmd.post_female,
-    qxmd.post_male   = 0.915 * qxmd.post_male
+    qxm.pre_female   = 0.960 * qxm.pre_female,
+    qxm.pre_male     = 0.995 * qxm.pre_male ,
+    qxm.post_female  = 1.084 * qxm.post_female,
+    qxm.post_male    = 0.992 * qxm.post_male,
+    qxmd.post_female = 0.991 * qxmd.post_female,
+    qxmd.post_male   = 1.051 * qxmd.post_male
+    
   )
 
 
-df_qxm_tier <-
-  df_qxm_imputed %>%
+df_qxm_tier <- 
+  df_qxm_imputed %>% 
   mutate(qxm.pre   = share_female * qxm.pre_female   + share_male * qxm.pre_male,
          qxm.post  = share_female * qxm.post_female  + share_male * qxm.post_male,
          qxmd.post = share_female * qxmd.post_female + share_male * qxmd.post_male,
          grp = tier_name
-         ) %>%
-  select(grp, age,
-         qxm.pre,   qxm.pre_female,  qxm.pre_male,
-         qxm.post,  qxm.post_female, qxm.post_male,
-         qxmd.post, qxmd.post_female,qxmd.post_male)
-
-
+         ) %>% 
+  select(grp, age, 
+         qxm.pre, qxm.pre_female, qxm.pre_male,
+         qxm.post, qxm.post_female, qxm.post_male,
+         qxmd.post, qxmd.post_female, qxmd.post_male)
   
 # df_qxr_tier
 # df_qxd_tier
@@ -355,11 +366,10 @@ df_qxm_tier <-
 
 
 
-
 #*******************************************************************************
 #        ## Decrements 2: Single decrement table ####
 #*******************************************************************************
-
+#*
 decrements_tier <- 
   expand.grid(age = range_age, 
               ea  = range_ea) %>% 
@@ -373,7 +383,7 @@ decrements_tier <-
 
   select(grp, ea, age, yos, 
          qxm.pre,   
-         qxm.pre_female, qxm.pre_male,
+         qxm.pre_female,   qxm.pre_male,
          qxm.post,  qxm.post_female,  qxm.post_male,
          qxmd.post, qxmd.post_female, qxmd.post_male,
          qxt, 
@@ -397,27 +407,23 @@ decrements_tier <-
 # Create 2 columns for each tier
  # elig_servRet_full:  number of year of being eligible for full or greater retirement benefits
  # elig_servRet_early: number of year of being eligible for early retirement benefits; 
- #                     0 after being eligible for full retirement benefits
- # year_b4full: number of years below the full/unreduced retirement age
+ #             0 after being eligible for full retirement benefits
 
 #   - Eligibility for unreduced benefits
-#'       - age 57 & yos 5
-#'
-#'  - Eligibility for reduced benefits
-#'      - age 50 & yos 5
-#'      - reduction: 7% per year before age 57
-
+#'       - age 55 & yos 5
+#'       - yos 30 
 
 
 decrements_tier  %<>% 
   group_by(ea) %>% 
   mutate(
     # Eligibility for full (or greater) retirement benefit
-    elig_servRet_full = ifelse( (age >= 57 & yos >= 5),
+    elig_servRet_full = ifelse(  (age >= 62 & yos >= 5),
                                  1, 0) %>% cumsum,
     
     # Eligibility for early retirement benefit
-    elig_servRet_early = ifelse( (age >= 50 & yos >= 5), 1, 0) %>% cumsum,
+    elig_servRet_early = ifelse(  (age >= 55 & yos >= 5),
+                                   1, 0) %>% cumsum,
     elig_servRet_early = ifelse( elig_servRet_full, 0, elig_servRet_early),
     
     # number of years before full retirement
@@ -462,19 +468,22 @@ decrements_tier %<>%
 #  each row is the improvement factor to be applied to the value in that year-age cell  
 
 
+
+
+
 # extending to 1900 to 2220
 #  -  assume 0 for year < 1951
-#  -  assume 2035 value for year > 2035
+#  -  assume 2036 value for year > 2036
 
-df_mp2019 <- 
+df_mp2020 <- 
   bind_rows(
 
-  df_mp2019_raw$male %>% 
+  df_mp2020_raw$male %>% 
   gather(year, fct, -age, -gender) %>% 
   mutate(year = as.numeric(year),
          fct = as.numeric(fct)),
 
-  df_mp2019_raw$female %>% 
+  df_mp2020_raw$female %>% 
     gather(year, fct, -age, -gender) %>% 
     mutate(year = as.numeric(year),
            fct = as.numeric(fct))
@@ -485,14 +494,14 @@ decrements_improvement <-
   expand_grid(gender = c("male", "female"), 
               age    = range_age,
               year   = 1900:2220) %>% 
-  left_join(df_mp2019,
+  left_join(df_mp2020,
             by = c("gender", "age", "year"))  
   
 
 decrements_improvement %<>% 
   group_by(gender, age) %>% 
   mutate(fct = ifelse(year < 1951, 0, fct),
-         fct = ifelse(year > 2035, fct[year ==  2035], fct),
+         fct = ifelse(year > 2036, fct[year ==  2036], fct),
          ) %>% 
   mutate(impr = ifelse(year > 2010, lag(cumprod(1 - ifelse(year>=2010,fct,0))), 1),
          impr = ifelse(year < 2010, lead(order_by(-year,  cumprod(1/(1 - ifelse(year<=2010,fct,0))))), impr)
@@ -502,26 +511,79 @@ decrements_improvement %<>%
 decrements_improvement %<>% 
   select(-fct) %>% 
   spread(gender, impr) %>% 
-  rename(impr_male   = male,
+  rename(impr_male = male,
          impr_female = female)
 
 
 
+
+# decrements_improvement <- 
+#   expand_grid(year =  2017:(2017+14),
+#               age  =  range_age) %>% 
+#   left_join(
+#     bind_rows(
+#       # df_qxm.post_imputed %>% mutate(year = 2017),
+#       # df_qxm.post_proj_imputed %>% 
+#       #   rename_with( ~str_remove(.x, "_proj" )) %>% 
+#       #   mutate(year = 2017+14)
+#       
+#       df_qxm.post_tier %>% mutate(year = 2017),
+#       df_qxm.post_proj_tier %>%
+#         rename_with( ~str_remove(.x, "_proj" )) %>%
+#         mutate(year = 2017+14)
+#       ),
+#     by = c("year", "age")
+#     )
+# 
+# decrements_improvement %<>% 
+#   group_by(age) %>% 
+#   arrange(age, year) %>% 
+#   # filter(age == 90) %>% 
+#   mutate(across(!c(year, grp), ~ seq(first(.x), last(.x), length.out = n()))) %>% 
+#   mutate(across(!c(year, grp), ~ .x / .x[year == min(year)])) %>% 
+#   rename_with(~ paste0("impr_", .x), !c(year, age, grp)) %>% 
+#   mutate(grp = tier_name )
 
 #*******************************************************************************
 #                      ## Salary Scale  ####
 #*******************************************************************************
 
 # df_salScale_imputed
-# wage inflation: 3.25% AV2019, ep 53
+# wage inflation: 3%
 
 df_salScale_tier <- 
   df_salScale_imputed %>% 
   mutate(grp = tier_name,
-         salScale = salScale_merit + 0.0325 ) %>%
+         salScale = salScale_merit + 0.03) %>%
   select(grp, yos, salScale) %>%
   arrange(yos)
   
+
+# # groups included
+# grp_include <- df_salScale_imputed$grp %>% unique
+# grp_include <- grp_include[str_detect(grp_include, "misc|inds")]
+# 
+# # weight for each group
+# wgts <- tibble(grp = grp_include, wgt = 0)
+# 
+# wgts[wgts$grp == "misc", "wgt"] <-  0.679
+# wgts[wgts$grp == "inds", "wgt"] <-  0.046
+# wgts
+# 
+# ## calculate weighted average
+# df_salScale_tier <- 
+#   df_salScale.merit_imputed %>% 
+#   filter(grp %in% grp_include) %>% 
+#   left_join(wgts, by = "grp") %>% 
+#   group_by(yos, ea) %>% 
+#   summarise(salScale.merit = weighted.mean(salScale.merit, wgt),
+#             .groups = "rowwise") %>% 
+#   mutate(grp = tier_name,
+#          salScale.infl = 0.0275,
+#          salScale = salScale.merit + salScale.infl) %>% 
+#   relocate(grp) %>% 
+#   arrange(ea, yos) %>% 
+#   ungroup()
 
 
 
@@ -557,35 +619,35 @@ df_n_actives_tier <-
   relocate(grp) %>% 
   arrange(ea, age) %>% 
   ungroup() %>% 
-
+  
+  # tier 1
   filter(ea >=20,
-         age <= 64,
-         yos <= 44) # no members are removed
+         age <= 69,
+         yos <= 49) # 21 members are removed
 
 
 # df_n_actives_tier %>% pull(nactives) %>% sum
 
 
 
-
-# Keep tier 2 members only
+# Keep tier 1 members only
 #  assume 
-#    - members with yos <= 4 are tier 2 members
+#    - members with yos > 7 are tier 1 members
  
 
 df_n_actives_tier %<>%
   mutate(nactives = case_when(
-    yos > 4 ~ 0,
+    yos > 7 ~ 0,
     TRUE ~ nactives
   ))
 
-# df_n_actives_tier$nactives %>% sum # 478, compared to 486 in AV2019 
-# weighted.mean(df_n_actives_tier$salary, df_n_actives_tier$nactives) #11.16k vs 11.28k from AV2019
+# df_n_actives_tier$nactives %>% sum
 
 
 
 ## Retirees (all types included)
-# all service retirees are tier 1 members
+
+# all service retirees are assumed to be tier 1 members
 
 df_n_servRet_tier <- 
   df_n_servRet_fillin %>% 
@@ -601,7 +663,10 @@ df_n_servRet_tier <-
   arrange(age) %>% 
   ungroup()
 
-# no retirees in tier 2
+# (df_n_servRet_tier$n_servRet*df_n_servRet_tier$benefit_servRet) %>% sum
+# model/target:
+
+# assume no retirees in tier 2
 df_n_servRet_tier %<>% 
   mutate(n_servRet = 0)
   
@@ -623,7 +688,7 @@ tier_params <-
     tier_name = tier_name,
     age_vben  = age_vben,
     v.year    = v.year,
-    fasyears  = fasyears,  # based on policy before PEPRA
+    fasyears  = fasyears,  
     cola_assumed = cola_assumed,
     share_male   = share_male,
     share_female = share_female

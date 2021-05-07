@@ -17,8 +17,9 @@ source("libraries.R")
 #*******************************************************************************
 #              ## tiers with only one member type  ####
 #*******************************************************************************
-# source("model/tiers/Tier_regular2t.R")
-# source("model/tiers/Tier_special.R")
+source("model/tiers/Tier_fc.t1.R")
+source("model/tiers/Tier_fc.t2.R")
 
-
+source("model/tiers/Tier_pf.t1.R")
+source("model/tiers/Tier_pf.t2.R")
 
