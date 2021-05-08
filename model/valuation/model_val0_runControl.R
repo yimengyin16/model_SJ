@@ -16,7 +16,7 @@ filePath_runControl <- paste0(dir_runControl, fn_runControl)
 
 # Path to amortization and asset smoothing info
 dir_planInfo <- "inputs/data_proc/"
-filePath_planInfo <- paste0(dir_planInfo, "Data_SJPF_planInfo_AV2019.RData")
+filePath_planInfo <- paste0(dir_planInfo, "Data_SJPF_planInfo_AV2020.RData")
 
 filePath_planInfo_fc <- paste0(dir_planInfo, "Data_SJFC_planInfo_AV2020.RData")
 

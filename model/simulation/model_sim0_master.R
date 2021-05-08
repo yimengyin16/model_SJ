@@ -3,7 +3,7 @@
 # Valuation name
 # rm(list = ls())
 
-# sim_name_run <- "Dev_fc.t2"
+# sim_name_run <- sim_runList$sim_name[1]
 # sim_paramlist <- filter(sim_runList, sim_name == sim_name_run) %>% as.list
 
 
@@ -41,7 +41,7 @@ i.r[1:10, 1:5]
 # source("model/simulation/model_sim_simulation_MEPERS(1).R") # no caps, no risk sharing
 # source("model/simulation/model_sim_simulation_MEPERS(1).R") # caps, no risk sharing
 
-source("model/simulation/model_sim_simulation_SJ(6).R") # caps, simple contingent COLA
+source("model/simulation/model_sim_simulation_SJ(7).R") # caps, simple contingent COLA
 
 {
   start_time <- Sys.time()	
@@ -171,7 +171,7 @@ penSim_results %<>%
          )
 
 
-penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display1))%>% print
+penSim_results %>% filter(sim == -1)  %>% select(one_of(var_display1))%>% print
 # mutate(EEC.SC_PR_chg = EEC.SC_PR - lag(EEC.SC_PR) ) 
 # penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
 # penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print

@@ -7,8 +7,8 @@
 #*******************************************************************************
 
 #' Inputs:
-#'   - inputs/data_proc/Data_SFPF_decrements_AV2019_imputed.RData
-#'   - inputs/data_proc/Data_SFPF_demographics_2019630_fillin.RData
+#'   - inputs/data_proc/Data_SFPF_decrements_AV2020_imputed.RData
+#'   - inputs/data_proc/Data_SFPF_demographics_2020630_fillin.RData
 
 
 #' What this file does
@@ -22,7 +22,7 @@
 #*******************************************************************************
 #                               Tier specification  ####
 #*******************************************************************************
-# Source: AV2019, ep59
+# Source: AV2020, ep59
 
 
 ##' Members included 
@@ -168,15 +168,15 @@ share_female <- 1 - share_male
 
 # t1 and t2 mebmers:
 #  Active members:
-#   - According to AV2019 ep 43, there are 486 tier 2 members
-#   - In AV2019 demographic data, the number of actives with yos <= 4 is 478
-#   - For now, use yos <= 4 as tier 2 members
-#   - In theory, some tier 2 police members should have yos = 5 (5 11/12). Should 
+#   - According to AV2020 ep 46, there are 565 tier 2 members, and 1144 tier 1 members
+#   - In AV2020 imputed demographic data, the number of actives with yos <= 5 is 551
+#   - For now, use yos <= 5 as tier 2 members
+#   - In theory, some tier 2 police members should have yos = 6 (6 11/12)?. Should 
 #     keep this in mind. 
 #
 #
 #  Serivice retirees for regular members
-#    - According to AV2019 ep 52, there are no any type of retirees in tier 2
+#    - According to AV2020 ep 30, there are no any type of retirees in tier 2
 #
 #
 #  Initial terminated members
@@ -186,7 +186,10 @@ share_female <- 1 - share_male
 #     under the current simplification method. The should not be an issue because the actual AL for termianted should be 
 #     very small as tier 2 is still new. 
 
-
+# df_nactives_fillin %>% 
+#   filter(yos <=5) %>% 
+#   pull(nactives) %>% 
+#   sum
 
 
 
@@ -219,8 +222,8 @@ cola_assumed <- 0.03 # assumed cola rates for valuation
 #                      ## Loading data  ####
 #*******************************************************************************
 
-load(paste0(dir_data, "Data_SJPF_decrements_AV2019_imputed.RData"))
-load(paste0(dir_data, "Data_SJPF_demographics_20190630_fillin.RData"))
+load(paste0(dir_data, "Data_SJPF_decrements_AV2020_imputed.RData"))
+load(paste0(dir_data, "Data_SJPF_demographics_20200630_fillin.RData"))
 df_mp2019_raw <- readRDS(paste0(dir_data, "MP2019_raw.rds"))
 
 # Data loaded:
@@ -654,7 +657,7 @@ df_n_actives_tier <-
 
 # df_n_actives_tier %>% pull(nactives) %>% sum
 
-# CalPERS: Check total salary againt the AV value: payroll
+# Check total salary againt the AV value: payroll
 # sum(df_n_actives_tier$nactives * df_n_actives_tier$salary)
 # model/target: 12951558687/12950836352 = 100.0056%
 
@@ -666,13 +669,18 @@ df_n_actives_tier <-
 
 df_n_actives_tier %<>%
   mutate(nactives = case_when(
-    yos <= 4 ~ 0,
+    yos <= 5 ~ 0,
     TRUE ~ nactives
   ))
 
-# df_n_actives_tier$nactives %>% sum
+ # df_n_actives_tier$nactives %>% sum 
+ # 1144 in AV2020
+ # 1157 imputed
+ # check payroll later
 
-
+sum(df_n_actives_tier$salary*df_n_actives_tier$nactives)
+# $176.9m
+# vs $160.87 from AV2020 ep29
 
 ## Retirees (all types included)
 
