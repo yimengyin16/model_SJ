@@ -825,13 +825,13 @@ if(tier_name %in% "fc.t2"){
 				## CA rule reduction
 				# bfactor_vec = ifelse(year >= year_reduction, bfactor - bfactor_reduction, bfactor),
 				# or
-				bfactor_vec = ifelse(year >= year_policyChg, bfactor_newServ, bfactor_vec),
+				# bfactor_vec = ifelse(year >= year_policyChg, bfactor_newServ, bfactor_vec),
 				
 				bfactor_vec_cum = cumsum(na2zero(bfactor_vec)),
 				
 				bfactor_vec_cumMax = ifelse(start_year >= year_policyChg, 
 																		ben_maxFAS, 
-																		max(ben_maxFAS, min(0.7, bfactor_vec_cum[year == year_policyChg]))
+																		max(0.7, min(0.7, bfactor_vec_cum[year == year_policyChg]))
 				),
 				
 				# Bx = pmin(0.9 * fas, na2zero(cumsum(bfactor_vec) * fas)),

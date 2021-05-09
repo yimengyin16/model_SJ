@@ -575,6 +575,7 @@ run_sim <- function(i.r_ = i.r,
     ls_servRet <- ls_servRet0
   
     if(k == -1) SC_amort[,] <- 0
+    if(k == -1) POB_issuance <- 0
     
     penSim[["i.r"]] <- i.r_[, as.character(k)]
     
@@ -923,7 +924,7 @@ run_sim <- function(i.r_ = i.r,
         penSim$EEC[j] <- penSim$EEC.NC[j] + penSim$EEC.SC[j] 
         penSim$EEC[j] <- max( penSim$EEC[j], penSim$NC[j] * EEC_floorNCshare)
         
-        penSim$ERC[j] <- with(penSim, max(na2zero(ERC_floorNCshare * PR[j]), ADC[j] - EEC[j]))
+        penSim$ERC[j] <- with(penSim, max(na2zero(ERC_floorNCshare * NC[j]), ADC[j] - EEC[j]))
         
         
          
