@@ -192,8 +192,15 @@ for (tierName in names(ls_tierData)){
 for (tierName in names(ls_tierData)){
 
 if (val_paramlist$estInitTerm){
-  AL.init.defrRet <-  val_paramlist$AL_defrRet_pctALservRet * aggLiab[[tierName]]$servRet.la[1, "ALx.servRet.la"]
- 
+  
+  AL_defrRet_pctALactives <- ifelse(str_detect(tierName, "t1"), 
+                                    val_paramlist$AL_defrRet_pctALactives.t1, 
+                                    val_paramlist$AL_defrRet_pctALactives.t2)
+  
+  
+  # AL.init.defrRet <-  val_paramlist$AL_defrRet_pctALservRet * aggLiab[[tierName]]$servRet.la[1, "ALx.servRet.la"]
+  AL.init.defrRet <-  AL_defrRet_pctALactives  * aggLiab[[tierName]]$active[1, "ALx.active"]
+  
   
   df_init.defrRet <- data.frame(
     year = 1:51 + (Global_paramlist$init_year - 1),

@@ -46,12 +46,12 @@ $~$
 
 ## Updates since last version:
 - Updated with 2020 actuarial valuation
-- Added risk analysis using stochastic simulations
+
 
 
 ## Future updates
 - Improve model calibration to better match the results in the actuarial valuation report
-
+- Added risk analysis using stochastic simulations
 
 $~$
 
@@ -68,7 +68,7 @@ We have modeled the San Jose Police and Fire Department Retirement Plan under it
 |                               |                      |                             |                                           |                                                                               |                                                                        |
 |                               | Tier2: 2.4%\~3.4%    |                             | Tier2: CPI capped at 2%                   | Tier2: 50% ADC with limit on annual increase; no less than 50% of normal cost |                                                                        |
 +-------------------------------+----------------------+-----------------------------+-------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------+
-| **Pre-1999 policy**           | Constant 2.5%        | 75% of final average salary | Tier1: 2.5% fixed                         |                                                                               |                                                                        |
+| **Pre-1999 policy**           | Constant 2.5%        | 75% of final average salary | Tier1: 2.25% fixed                        |                                                                               |                                                                        |
 |                               |                      |                             |                                           |                                                                               |                                                                        |
 |                               | for new service only |                             | Tier2: no change                          |                                                                               |                                                                        |
 +-------------------------------+----------------------+-----------------------------+-------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------+
@@ -85,7 +85,7 @@ We have modeled the San Jose Police and Fire Department Retirement Plan under it
 
     -   Maximum benefit is reduced to 75% of final average salary (90% in Baseline). If a plan member has already accrued more than 75% of the final average salary by the time of policy change (2019 in the model), the accrued level will be used as the maximum benefit (still capped by 90%).
 
-    -   COLA for tier 1 is reduced from 3% to 2.5%.
+    -   COLA for tier 1 is reduced from 3% to 2.25%.
 
     -   We assume the reduction in future benefit is immediately reflected in the accrued liability and normal cost.
 
@@ -103,7 +103,7 @@ We have modeled the San Jose Police and Fire Department Retirement Plan under it
 
 3.  **POB of full UAAL:**
 
-    -   The POB issuance is equal to the entire amount of UAAL in 2019.
+    -   The POB issuance is equal to the entire amount of UAAL in 2020.
     -   Terms of POB: 20 years with 3% interest
     -   Equal annual debt service
 
@@ -111,13 +111,13 @@ We assume all policies go fully into effect in the first year. The benefit facto
 
 ## Investment return scenarios
 
-In the tables below we show results for 2019 (the actuarial valuation year and our first year) and for 2028. The model goes out much further in time and it can be useful to pay attention to later time periods as well to gain a better understanding of investment risks and amortization policies. We have examined these policies and variants under three investment scenarios:
+In the tables below we show results for 2020 (the actuarial valuation year and our first year) and for 2029. The model goes out much further in time and it can be useful to pay attention to later time periods as well to gain a better understanding of investment risks and amortization policies. We have examined these policies and variants under three investment scenarios:
 
-1.  Deterministic: 6.75% investment return assumption achieved every year. This is the San Jose police and fire plan assumption in 2019, save for any planned earnings assumption reductions.
+1.  Deterministic: 6.625% investment return assumption achieved every year. This is the San Jose police and fire plan assumption in 2020, save for any planned earnings assumption reductions.
 
-2.  Deterministic asset shock: This is based loosely on stress-test scenarios used by Pew, which in turn are based loosely on Dodd-Frank assumptions. We assume 6.75% return in 2019, 6.75% in 2020, negative 24% in 2021, then 3 years of 12% (2022-2024), then 6.75% annually thereafter.
+2.  Deterministic asset shock: This is based loosely on stress-test scenarios used by Pew, which in turn are based loosely on Dodd-Frank assumptions. We assume 6.625% return in 2020, 6.625% in 2021, negative 24% in 2022, then 3 years of 12% (2023-2025), then 6.625% annually thereafter.
 
-3.  Stochastic: 6.75% expected mean return, 12% standard deviation: This allows us to see how the policies, particularly the contingent COLA policy, interact with investment return volatility. The tables below provide summary results for the deterministic scenarios. We will add tables for the stochastic return scenario in a later iteration.
+3.  Stochastic: 6.625% expected mean return, 12% standard deviation: This allows us to see how the policies, particularly the contingent COLA policy, interact with investment return volatility. The tables below provide summary results for the deterministic scenarios. We will add tables for the stochastic return scenario in a later iteration.
 
 # **Impact on contributions and funded status**
 
@@ -355,7 +355,7 @@ df_sumTbl_chg1 %>%
     locations = cells_row_groups()
 	 ) %>% 
  tab_footnote(
-    footnote = "All existing amortization bases in 2019 are expected to be paid off by 2038; present values are calculated with a discount rate of 6.625%.",
+    footnote = "All existing amortization bases in 2020 are expected to be paid off by 2039; present values are calculated with a discount rate of 6.625%.",
     locations = cells_column_spanners(
      "Total present value over 20 years (2020-2039)"
     )
@@ -437,7 +437,7 @@ tbl_summary_dlr <-
     locations = cells_row_groups()
 	 ) %>% 
  tab_footnote(
-    footnote = "All existing amortization bases in 2020 are expected to be paid off by 2038; present values are calculated with a discount rate of 6.625%.",
+    footnote = "All existing amortization bases in 2020 are expected to be paid off by 2039; present values are calculated with a discount rate of 6.625%.",
     locations = cells_column_spanners(
      "Total present value over 20 years (2020-2039)"
     )

@@ -3,7 +3,9 @@
 ##                            Loading data                                  ####
 #*******************************************************************************
 
+# rm(list = ls())
 invisible(gc())
+
 
 df_simNames <- 
   read_excel(paste0(here::here(), "/model/RunControl.xlsx"), sheet = "SimsAnalysis") %>% 
