@@ -1,5 +1,5 @@
 ---
-title: "San Jose public pension plans: \npreliminary results for discussion"
+title: "San Jose Police and Fire Department Retirement Plan: \npreliminary results for discussion"
 output:
   html_notebook:
     toc: yes
@@ -7,7 +7,7 @@ output:
   word_document:
     toc: yes
 editor_options:
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r loading results, include=FALSE}
@@ -21,7 +21,8 @@ dir_simResults <- "model/simulation/outputs_sim/"
 source(paste0(here::here(), "/analysis/analysis_loadingResults.R"))
 
 
-
+df_results %<>% 
+	filter(str_detect(sim_name, "pf."))
 
 
 # vars_report <- c("sim_name","sim", "year", "AL", "UAAL", "FR_MA", "ERC", "ERC_PR", "EEC", "EEC_PR", "NC_PR", "NC.ER_PR", "SC_PR")
@@ -36,15 +37,6 @@ df_results <-
 	mutate(UAAL_noPOB = UAAL,
 				 UAAL = UAAL + na2zero(POB_debt))
  
-
-# df_results_pf %<>% 
-# 	filter(str_detect(sim_name, "pf."))
-# 
-# df_results_fc %<>% 
-# 	filter(str_detect(sim_name, "fc."))
-# 
-
-
 
 ```
 
@@ -228,12 +220,9 @@ get_PVC <- function(df, span, dr){
 # PV contributions: 2020-2039 (20 years)
 df_PVC_20y <- get_PVC(df_results, span = 19, dr = dr)
 
-
-
 df_C1 <- 
   df_PVC_20y %>% 
-	#filter(sim %in% c(0, -2), str_detect(sim_name, "agg"), !str_detect(sim_name, "highERC") ) %>% 
-	filter(str_detect(sim_name, "sj.agg"), !str_detect(sim_name, "highERC") ) %>% 
+	filter(sim %in% c(0, -2), str_detect(sim_name, "agg"), !str_detect(sim_name, "highERC") ) %>% 
 	select(sim_name, sim, ERC_PV, EEC_PV) %>% 
 	arrange(desc(sim), sim_name) %>% 
 	mutate(across(c(ERC_PV, EEC_PV), ~ .x/1e6)) 
@@ -245,7 +234,7 @@ df_C2 <-
   df_results %>% 
 	as_tibble() %>% 
 	mutate(FR_AA = 100*AA/AL) %>% 
-	filter(sim %in% c(0, -2), year %in% c(2020, 2029), str_detect(sim_name, "sj.agg"), !str_detect(sim_name, "highERC") ) %>% 
+	filter(sim %in% c(0, -2), year %in% c(2020, 2029), str_detect(sim_name, "agg"), !str_detect(sim_name, "highERC") ) %>% 
 	select(sim_name, sim, year, ERC, UAAL, ERC_PR, FR_AA) %>% 
 	arrange(desc(sim), year, sim_name) %>% 
 	mutate(across(c(ERC, UAAL), ~ .x/1e6)) %>% 
@@ -263,19 +252,19 @@ df_C2 <-
 df_rowNames1 <- 
 	tribble(
 	~sim_name, ~sim_label,
-	"sj.agg_baseline",     "Baseline: current policy ($million)",
-	"sj.agg_POB",          "POB for full UAAL",
-	"sj.agg_pre99_lowERC", "Pre-1999 benefit",
-	"sj.agg_sharedCost",   "Cost-sharing policy"
+	"pf.agg_baseline",     "Baseline: current policy ($million)",
+	"pf.agg_POB",          "POB for full UAAL",
+	"pf.agg_pre99_lowERC", "Pre-1999 benefit",
+	"pf.agg_sharedCost",   "Cost-sharing policy"
 	)
 
 df_rowNames2 <- 
 	tribble(
 	~sim_name, ~sim_label,
-	"sj.agg_baseline",     "Baseline: current policy",
-	"sj.agg_POB",          "POB for full UAAL",
-	"sj.agg_pre99_lowERC", "Pre-1999 benefit",
-	"sj.agg_sharedCost",   "Cost-sharing policy"
+	"pf.agg_baseline",     "Baseline: current policy",
+	"pf.agg_POB",          "POB for full UAAL",
+	"pf.agg_pre99_lowERC", "Pre-1999 benefit",
+	"pf.agg_sharedCost",   "Cost-sharing policy"
 	)
 
 
@@ -506,9 +495,9 @@ shapes_manual <- c(18, 25, 15, 19)
 df_tierLab <- 
 	tribble(
 		~tier, ~labels,
-		"sj.agg", "Total of two plans",
-		"fc.agg", "Federated",
-		"pf.agg", "Police and Fire"
+		"pf.agg", "P&F total",
+		"pf.t1",  "P&F tier 1",
+		"pf.t2",  "P&F tier 2"
 	)
 
 df_policyLab <- 
@@ -529,18 +518,17 @@ df_results %<>%
 df_fig <- 
 	df_results %>% 
 	filter(year <= 2050) %>% 
-	filter(str_detect(sim_name, "agg")) %>% 
 	select(sim_name, sim, year, AL, FR_MA, ERC_PR, EEC_PR, NC_PR, C_PR,C, SC_PR,SC, C_ADC, PR, LG, ERC, POB_payment) %>% 
 	mutate(AL = AL/1e6,
-				 policy = str_remove(sim_name,  "sj.agg_|pf.agg_|pf.t1_|pf.t2_|fc.agg_|fc.t1_|fc.t2_"),
-         tier   = str_extract(sim_name, "sj.agg|pf.agg|pf.t1|pf.t2|fc.agg|fc.t1|fc.t2"),
+				 policy = str_remove(sim_name,  "pf.agg_|pf.t1_|pf.t2_"),
+         tier   = str_extract(sim_name, "pf.agg|pf.t1|pf.t2"),
 				 ) %>% 
 	filter(!str_detect(policy, "highERC")) %>% 
 	mutate(tier   = factor(tier,   df_tierLab$tier, df_tierLab$labels),
 				 policy = factor(policy, df_policyLab$policy, df_policyLab$labels),
 				 )
 	
-	#df_fig %>% filter(is.na(tier))
+	
 
 df_fig_det <- 
   df_fig %>% 
@@ -565,16 +553,16 @@ fig_AL_det <-
 	facet_grid(~tier)+
 	geom_line() + 
 	geom_point() + 
-	coord_cartesian(ylim = c(0, 20000)) + 
+	coord_cartesian(ylim = c(0, 10000)) + 
 	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 10))) + 
-	scale_y_continuous(breaks = c(seq(0, 100000, 2000))) + 
+	scale_y_continuous(breaks = c(seq(0, 10000, 1000))) + 
 	scale_color_manual(values = colors_manual) + 
 	scale_shape_manual(values = shapes_manual) + 
 	theme(legend.position = "bottom") +
 	labs( title = "Actuarial liability",
 		    x = NULL,
 				y = "Actuarial liability ($million)")
- fig_AL_det
+# fig_AL_det
 
 
 fig_FR_det <- 
@@ -670,9 +658,9 @@ fig_AL_shock <-
 	facet_grid(~tier)+
 	geom_line() + 
 	geom_point() + 
-	coord_cartesian(ylim = c(0, 20000)) + 
+	coord_cartesian(ylim = c(0, 10000)) + 
 	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
-	scale_y_continuous(breaks = c(seq(0, 100000, 2000))) + 
+	scale_y_continuous(breaks = c(seq(0, 10000, 1000))) + 
 	scale_color_manual(values =  colors_manual) + 
 		scale_shape_manual(values = shapes_manual) + 
 	theme(legend.position = "bottom")
@@ -1545,10 +1533,16 @@ df_PVC_diff <-
   df_PVC2 %>% 
 	filter(str_detect(sim_name, "agg")) %>% 
 	left_join(df_pv_baseline, by = "sim") %>% 
-	mutate(CwUAAL_PV = CwUAAL_PV/CwUAAL_PV_base - 1,  
-				 ERC_PV    = ERC_PV/ERC_PV_base - 1,
-				 EEC_PV    = EEC_PV/EEC_PV_base - 1,
-				 UAAL_PV   = UAAL_PV/UAAL_PV_base - 1
+	mutate(
+		       # CwUAAL_PV = CwUAAL_PV/CwUAAL_PV_base - 1,  
+	# 			 ERC_PV    = ERC_PV/ERC_PV_base - 1,
+	# 			 EEC_PV    = EEC_PV/EEC_PV_base - 1,
+	# 			 UAAL_PV   = UAAL_PV/UAAL_PV_base - 1
+				 
+				 CwUAAL_PV = CwUAAL_PV-CwUAAL_PV_base,  
+				 ERC_PV    = ERC_PV-ERC_PV_base,
+				 EEC_PV    = EEC_PV-EEC_PV_base,
+				 UAAL_PV   = UAAL_PV-UAAL_PV_base
 				 ) 
 
 # percentiles
@@ -1681,23 +1675,23 @@ df_PVC_diff %>%
 	filter(str_detect(sim_name, "POB")) %>% 
 	#filter(geoR_pdiff < 0 ) %>% 
 	ggplot(aes(x = geoR, y = CwUAAL_PV)) +
-	geom_point() +
-	coord_cartesian(ylim = c(-1,1))
+	geom_point()
+	#coord_cartesian(ylim = c(-1,1))
 
 df_PVC_diff %>% 
 	filter(str_detect(sim_name, "POB")) %>% 
 # filter(geoR_pdiff > 0 ) %>% 
 	ggplot(aes(x = geoR, y = ERC_PV)) +
 	geom_point() +
-	coord_cartesian(ylim = c(-1,1)) + 
+	#coord_cartesian(ylim = c(-1,1)) + 
 	geom_smooth(method='lm', formula = y~x+I(x^2))
 
 df_PVC_diff %>% 
 	filter(str_detect(sim_name, "POB")) %>% 
   #filter(geoR_pdiff < 0 ) %>% 
 	ggplot(aes(x = geoR, y = UAAL_PV)) +
-	geom_point() +
-	coord_cartesian(ylim = c(-1,1))
+	geom_point() 
+	#coord_cartesian(ylim = c(-1,1))
 
 
 
@@ -1705,8 +1699,8 @@ df_PVC_diff %>%
 df_PVC_diff %>% 
 	filter(str_detect(sim_name, "POB")) %>% 
 	ggplot(aes(x = geoR_pdiff, y = CwUAAL_PV)) +
-	geom_point() +
-	coord_cartesian(ylim = c(-1,1)) 
+	geom_point() 
+	# coord_cartesian(ylim = c(-1,1)) 
 	# geom_smooth(method='lm', formula = y~x)
 
 df_PVC_diff %>% 
@@ -1714,7 +1708,7 @@ df_PVC_diff %>%
 	#filter(geoR_p1 < dr ) %>% 
 	ggplot(aes(x = geoR_pdiff, y = ERC_PV)) +
 	geom_point() +
-	coord_cartesian(ylim = c(-1,1)) + 
+	#coord_cartesian(ylim = c(-1,1)) + 
 	geom_smooth(method='lm', formula = y~x)
 
 df_PVC_diff %>% 
@@ -1730,22 +1724,22 @@ df_PVC_diff %>%
 df_PVC_diff %>% 
 	filter(str_detect(sim_name, "POB")) %>% 
 	ggplot(aes(x = geoR_p1, y = CwUAAL_PV)) +
-	geom_point() +
-	coord_cartesian(ylim = c(-1,1))
+	geom_point() 
+	# coord_cartesian(ylim = c(-1,1))
 
 df_PVC_diff %>% 
 	filter(str_detect(sim_name, "POB")) %>% 
 	ggplot(aes(x = geoR_p1, y = ERC_PV)) +
 	geom_point() +
-	coord_cartesian(ylim = c(-1,1)) + 
+	# coord_cartesian(ylim = c(-1,1)) + 
 	geom_vline(xintercept = 0.06625, linetype = 2)
 	#geom_smooth(method='lm', formula = y~x+I(x^2))
 
 df_PVC_diff %>% 
 	filter(str_detect(sim_name, "POB")) %>% 
 	ggplot(aes(x = geoR_p1, y = UAAL_PV)) +
-	geom_point() +
-	coord_cartesian(ylim = c(-1,1)) 
+	geom_point() 
+	# coord_cartesian(ylim = c(-1,1)) 
 
 
 

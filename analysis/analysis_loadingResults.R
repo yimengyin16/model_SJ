@@ -30,24 +30,27 @@ df_results <-
 
 vars_agg <- c("AL", "UAAL", "MA", "AA", "NC", "SC", "ERC", "EEC", "PR")
 
+sum_noNA <- function(x) sum(x, na.rm = TRUE)
+
+# aggregate results for each of the two plans
 df_results_agg <-
   df_results %>%
   mutate(sim_name = str_replace(sim_name, ".t1|.t2", ".agg")) %>%
   group_by(sim_name, sim, year) %>%
   summarise(
   	sim_name = sim_name[1],
-    AL = sum(AL),
-    MA = sum(MA),
-    AA = sum(AA),
-    UAAL = sum(UAAL),
-    NC = sum(NC),
-    SC = sum(SC),
-    ERC = sum(ERC),
-    EEC = sum(EEC),
-    PR  = sum(PR),
-    B   = sum(B),
-    POB_payment = sum(POB_payment),
-  	POB_debt    = sum(POB_debt),
+    AL = sum_noNA(AL),
+    MA = sum_noNA(MA),
+    AA = sum_noNA(AA),
+    UAAL = sum_noNA(UAAL),
+    NC = sum_noNA(NC),
+    SC = sum_noNA(SC),
+    ERC = sum_noNA(ERC),
+    EEC = sum_noNA(EEC),
+    PR  = sum_noNA(PR),
+    B   = sum_noNA(B),
+    POB_payment = sum_noNA(POB_payment),
+  	POB_debt    = sum_noNA(POB_debt),
     i.r = i.r[1],
   	plan = plan[1],
   	policy = policy[1],
@@ -55,15 +58,45 @@ df_results_agg <-
     .groups = "drop"
   ) %>%
   mutate(
-
-        
          tier = "Plan"
          )
+
+# Aggregate of the two plans
+df_results_agg_sj <- 
+  df_results_agg %>% 
+	mutate(sim_name = str_replace(sim_name, "fc.|pf.", "sj.")) %>%
+	group_by(sim_name, sim, year) %>%
+	summarise(
+		sim_name = sim_name[1],
+		AL = sum_noNA(AL),
+		MA = sum_noNA(MA),
+		AA = sum_noNA(AA),
+		UAAL = sum_noNA(UAAL),
+		NC = sum_noNA(NC),
+		SC = sum_noNA(SC),
+		ERC = sum_noNA(ERC),
+		EEC = sum_noNA(EEC),
+		PR  = sum_noNA(PR),
+		B   = sum_noNA(B),
+		POB_payment = sum_noNA(POB_payment),
+		POB_debt    = sum_noNA(POB_debt),
+		i.r = i.r[1],
+		# plan = plan[1],
+		policy = policy[1],
+		ERCType = ERCType[1],
+		.groups = "drop"
+	) %>%
+	mutate(
+		tier = "city",
+		plan = "city"
+	)
+	
 
 
 df_results <-
   bind_rows(df_results,
-            df_results_agg) %>%
+            df_results_agg,
+  					df_results_agg_sj) %>%
 	mutate( 
 		ERC_pension = ERC,
 		ERC  = ERC_pension + POB_payment,

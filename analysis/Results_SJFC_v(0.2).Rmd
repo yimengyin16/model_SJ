@@ -7,7 +7,7 @@ output:
   word_document:
     toc: yes
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r loading results, include=FALSE}
@@ -30,7 +30,12 @@ df_results %<>%
 
 init_year <- 2020
 dr <- 0.06625
- 
+
+df_results <- 
+	df_results %>% 
+	mutate(UAAL_noPOB = UAAL,
+				 UAAL = UAAL + na2zero(POB_debt))
+
 
 ```
 
@@ -118,10 +123,6 @@ In the tables below we show results for 2019 (the actuarial valuation year and o
 #year_init
 
 
-df_results <- 
-	df_results %>% 
-	mutate(UAAL_noPOB = UAAL,
-				 UAAL = UAAL + na2zero(POB_debt))
 
 # df_results %>%
 # 	filter(str_detect(sim_name, "agg_POB"))
@@ -1128,7 +1129,7 @@ df_ben_sum %>%
 	select(cohort, policy, sim, B_a55) %>% 
 	ggplot(aes(x = cohort, y = B_a55, fill = policy)) + theme_bw() + 
 	geom_bar(position = "dodge", stat = "identity") +
-	coord_cartesian(ylim = c(0, 220000)) + 
+	coord_cartesian(ylim = c(0, 150000)) + 
 	scale_fill_manual(values = colors_ERC) + 
 	scale_y_continuous(labels = scales::comma ) +
 		labs(
@@ -1144,7 +1145,7 @@ fig_ben80 <-
 	select(cohort, policy, sim, B_real_a80) %>% 
 	ggplot(aes(x = cohort, y = B_real_a80, fill = policy)) + theme_bw() + 
 	geom_bar(position = "dodge", stat = "identity") + 
-	coord_cartesian(ylim = c(0, 220000)) + 
+	coord_cartesian(ylim = c(0, 150000)) + 
 	scale_fill_manual(values = colors_ERC) + 
 	scale_y_continuous(labels = scales::comma ) +
 	# scale_y_continuous(breaks = seq(0,1, 0.02), labels = function(x) percent(x, accuracy = 1) ) + 
