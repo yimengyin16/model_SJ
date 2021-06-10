@@ -150,7 +150,7 @@ pop <- get_demographics(ls_tierData)
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_indivLiab_flexbf(7).R", local = TRUE)
+source("model/valuation/model_val_indivLiab_flexbf(8).R", local = TRUE)
 
 indivLiab <- list()
 
@@ -257,8 +257,8 @@ for (tierName in names(ls_tierData)){
 
   init_amort_include <- 
     case_when(
-      tierName %in% "pf.t1" ~  c("pf.t1.fire", "pf.t1.police"),
-      tierName %in% "pf.t2" ~  c("pf.t2.fire", "pf.t2.police"),
+      tierName %in% c("pf.t1", "pf.t1.disb", "pf.t1.disb.upper", "pf.t1.disbMort") ~  c("pf.t1.fire", "pf.t1.police"),
+      tierName %in% c("pf.t2", "pf.t2.disb", "pf.t2.disb.upper", "pf.t2.disbMort") ~  c("pf.t2.fire", "pf.t2.police"),
       tierName %in% "fc.t1" ~  c("t1"),
       tierName %in% "fc.t2" ~  c("t2"),
       TRUE ~                   NA_character_
@@ -383,6 +383,12 @@ saveRDS(
 #   649772643 + 
 #  2463615238
 # 
+# 
+# x <- c("a", "b", "c")
+# y = "u"
+# 
+# case_when(y %in% x   ~ c("f", "n"),
+#           y %in% "u" ~ c("u"))
 # 
 
 

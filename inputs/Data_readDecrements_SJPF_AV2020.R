@@ -93,11 +93,31 @@ df_qxr_t2_raw <-
 ## Target format, cols:
 #' - grp
 #' - age/yos
-#' - qxr
+#' - qxd
 
 df_qxd_raw <- 
   read_excel_range(filePath_dataRaw, "disbRet")$df %>% 
   mutate(age = as.numeric(age)) 
+
+
+
+
+
+#*******************************************************************************
+#                      ## Importing disability retirement rates, PERF ####
+#*******************************************************************************
+## For constructing alternative scenarios with lower disability rates
+
+## Target format, cols:
+#' - grp
+#' - age/yos
+#' - qxd
+
+df_qxd_PERF_raw <- 
+  read_excel_range(filePath_dataRaw, "disbRet_PERF")$df %>% 
+  mutate(age = as.numeric(age)) 
+
+
 
 
 
@@ -108,7 +128,7 @@ df_qxd_raw <-
 ## Target format, cols:
 #' - grp
 #' - age/yos
-#' - qxr
+#' - qxt
 
 
 df_qxt_raw <-
@@ -160,7 +180,8 @@ df_salScale_raw <-
 
 df_qxr_t1_raw
 df_qxr_t2_raw
-df_qxd_raw 
+df_qxd_raw
+df_qxd_PERF_raw
 df_qxt_raw
 #df_qxm_raw
 df_salScale_raw
@@ -171,6 +192,7 @@ save(
   df_qxr_t1_raw,
   df_qxr_t2_raw,
   df_qxd_raw,
+  df_qxd_PERF_raw,
   df_qxt_raw,
   # df_qxm_raw,
   df_salScale_raw,

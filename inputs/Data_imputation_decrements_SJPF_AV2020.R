@@ -126,7 +126,7 @@ df_qxr_imputed <-
 
 
 #*******************************************************************************
-#                      ## Imputing disability retirement rates ####
+#                      ## Imputing disability retirement rates, SJ ####
 #*******************************************************************************
 
 # Imputation:
@@ -143,6 +143,34 @@ df_qxd_imputed <-
   ungroup
 
 # qplot(data = df_qxd_imputed, x = age, y = qxd, color = grp, geom = "line")
+
+
+#*******************************************************************************
+#                      ## Imputing disability retirement rates, PERF ####
+#*******************************************************************************
+
+# Imputation:
+#   - range 20-65
+
+
+df_qxd_PERF_imputed <- 
+  df_qxd_PERF_raw %>% 
+  relocate(grp) %>% 
+  as.data.frame() %>% 
+  splong(fillvar = "age", fitrange = 20:65, method = "hyman") %>%
+  group_by(grp) %>% 
+  mutate(qxd = ifelse(age < 25, qxd[age == 25], qxd)) %>% 
+  ungroup
+
+# qplot(data = df_qxd_PERF_imputed, x = age, y = qxd, color = grp, geom = "line")
+
+# qplot(
+#   data = bind_rows(
+#   df_qxd_PERF_imputed,
+#   df_qxd_imputed) %>% 
+#   mutate(grp = factor(grp) %>% fct_inorder()),
+#   x = age, y = qxd, color = grp, geom = "line")
+# 
 
 
 #*******************************************************************************
@@ -327,12 +355,13 @@ df_salScale_imputed <-
 #                      ## Review and save the results ####
 #*********************************************************************************************************
 
-df_qxr_imputed
-df_qxd_imputed
-df_qxt_imputed
-df_qxm_imputed
-df_salScale_imputed
-
+# df_qxr_imputed
+# df_qxd_imputed
+# df_qxt_imputed
+# df_qxm_imputed
+# df_salScale_imputed
+# 
+# df_qxd_PERF_imputed
 
 
 save(
@@ -342,9 +371,29 @@ save(
   df_qxm_imputed,
   df_salScale_imputed,
   
+  df_qxd_PERF_imputed,
+  
 	file = paste0(dir_outputs, "Data_SJPF_decrements_AV2020_imputed.RData")
 )
 
+# 
+# df_qxm_imputed %>% 
+#   select(age, qxm.post_male, qxmd.post_male) %>% 
+#   filter(age>=50, age< 98) %>% 
+#   gather(Var, value, -age) %>% 
+#   qplot(x = age, y = value, color = Var, data = ., geom = "line")
+# 
+# 
+# df_qxm_imputed %>% 
+#   select(age, qxm.post_male, qxmd.post_male) %>% 
+#   filter(age>=60) %>% 
+#   gather(Var, value, -age) %>% 
+#   group_by(Var) %>% 
+#   mutate(value = lag(cumprod(1 - value))) %>% 
+#   qplot(x = age, y = value, color = Var, data = ., geom = "line")
 
 
 
+  
+  
+  

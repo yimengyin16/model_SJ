@@ -287,7 +287,8 @@ cat("......DONE\n")
 
 ## Calculating benefit payment in the first retirement year
 
-if(tier_name %in% c("pf.t1", "pf.t1.disb") ){
+if(tier_name %in% c("pf.t1", "pf.t1.disb", 
+										"pf.t1.disb.upper", "pf.t1.disbMort") ){
 
 	calib_Bx.servRet <- 1.05
 	calib_Bx.disbRet <- 1.4
@@ -453,7 +454,8 @@ if(tier_name %in% c("pf.t1", "pf.t1.disb") ){
 }
 
 
-if(tier_name %in% c("pf.t2", "pf.t2.disb") ){
+if(tier_name %in% c("pf.t2", "pf.t2.disb", 
+										"pf.t2.disb.upper", "pf.t2.disbMort") ){
 	
 	calib_Bx.servRet <- 1
 	calib_Bx.disbRet <- 1
