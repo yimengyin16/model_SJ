@@ -67,3 +67,18 @@ df_disbRates %>%
 
 
 
+
+df_disbRates %>% 
+	filter(age %in% c(40, 50, 60))
+
+
+
+
+
+
+
+
+
+
+
+

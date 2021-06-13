@@ -127,7 +127,7 @@ In the tables below we show results for 2020 (the actuarial valuation year and o
 
 
 ## PV ERC and EEC 
-get_PVC <- function(df, span, dr){
+get_PVC <- function(df, year_range, dr){
 
 	# df <- results_all
 	# span = 41
@@ -139,7 +139,8 @@ get_PVC <- function(df, span, dr){
 	
 	 
   df %>% 
-	filter(year <= span + init_year) %>% 
+	#filter(year <= span + init_year) %>% 
+	filter(year %in% year_range) %>% 
 	select(sim_name, sim, year, ERC, EEC, UAAL, AL, PR) %>% 
 	group_by(sim_name, sim) %>% 
 	mutate(year = year - init_year + 1) %>% 
@@ -210,7 +211,7 @@ get_PVC <- function(df, span, dr){
 
 
 # PV contributions: 2020-2039 (20 years)
-df_PVC_20y <- get_PVC(df_results, span = 19, dr = dr)
+df_PVC_20y <- get_PVC(df_results, year_range = 2021:2040, dr = dr)
 
 df_C1 <- 
   df_PVC_20y %>% 
@@ -226,7 +227,7 @@ df_C2 <-
   df_results %>% 
 	as_tibble() %>% 
 	mutate(FR_AA = 100*AA/AL) %>% 
-	filter(sim %in% c(0, -2), year %in% c(2020, 2029), str_detect(sim_name, "agg"), !str_detect(sim_name, "highERC") ) %>% 
+	filter(sim %in% c(0, -2), year %in% c(2021, 2030), str_detect(sim_name, "agg"), !str_detect(sim_name, "highERC") ) %>% 
 	select(sim_name, sim, year, ERC, UAAL, ERC_PR, FR_AA) %>% 
 	arrange(desc(sim), year, sim_name) %>% 
 	mutate(across(c(ERC, UAAL), ~ .x/1e6)) %>% 
@@ -266,8 +267,8 @@ df_sumTbl <-
   left_join(df_C2, df_C1) %>% 
 	arrange(desc(sim),sim_name) %>% 
 	mutate(sim = factor(sim, levels = c(0, -2), 
-											labels = c("Assumption met (constant 6.75% annual return)", 
-																 "Asset shock (-24% in 2021 followed by recovery)"))) %>% 
+											labels = c("Assumption met (constant 6.625% annual return)", 
+																 "Asset shock (-24% in 2022 followed by recovery)"))) %>% 
 	group_by(sim)
 
 
@@ -300,23 +301,23 @@ df_sumTbl_chg1 %>%
 	#fmt_markdown(columns = vars(sim_name)) %>% 
 	cols_label(
 		sim_name = "",
-		y2020_ERC = "Employer contribution",
-		y2029_ERC = "Employer contribution",
-		y2020_UAAL = "UAAL",
-		y2029_UAAL = "UAAL",
+		y2021_ERC = "Employer contribution",
+		y2030_ERC = "Employer contribution",
+		y2021_UAAL = "UAAL",
+		y2030_UAAL = "UAAL",
 		ERC_PV = "Employer contribution",
 		EEC_PV = "Employee contribution"
 	) %>% 
 	tab_spanner(
-    label = "2020",
-    columns = c("y2020_ERC", "y2020_UAAL")
+    label = "2021",
+    columns = c("y2021_ERC", "y2021_UAAL")
     ) %>% 
 	tab_spanner(
-    label = "2029",
-    columns = c("y2029_ERC", "y2029_UAAL")
+    label = "2030",
+    columns = c("y2030_ERC", "y2030_UAAL")
     ) %>% 
 	tab_spanner(
-    label = "Total present value over 20 years (2020-2039)",
+    label = "Total present value over 20 years (2021-2040)",
     columns = c("ERC_PV", "EEC_PV")
     ) %>% 
 	cols_width(
@@ -351,9 +352,9 @@ df_sumTbl_chg1 %>%
     locations = cells_row_groups()
 	 ) %>% 
  tab_footnote(
-    footnote = "All existing amortization bases in 2020 are expected to be paid off by 2039; present values are calculated with a discount rate of 6.625%.",
+    footnote = "All existing amortization bases in 2021 are expected to be paid off by 2040; present values are calculated with a discount rate of 6.625%.",
     locations = cells_column_spanners(
-     "Total present value over 20 years (2020-2039)"
+     "Total present value over 20 years (2021-2040)"
     )
  ) 
 # %>% 
@@ -383,23 +384,23 @@ tbl_summary_dlr <-
   gt %>% 
 	cols_label(
 		sim_name = "",
-		y2020_ERC = "Employer contribution",
-		y2029_ERC = "Employer contribution",
-		y2020_UAAL = "UAAL",
-		y2029_UAAL = "UAAL",
+		y2021_ERC = "Employer contribution",
+		y2030_ERC = "Employer contribution",
+		y2021_UAAL = "UAAL",
+		y2030_UAAL = "UAAL",
 		ERC_PV = "Employer contribution",
 		EEC_PV = "Employee contribution"
 	) %>% 
 	tab_spanner(
-    label = "2020",
-    columns = c("y2020_ERC", "y2020_UAAL")
+    label = "2021",
+    columns = c("y2021_ERC", "y2021_UAAL")
     ) %>% 
 	tab_spanner(
-    label = "2029",
-    columns = c("y2029_ERC", "y2029_UAAL")
+    label = "2030",
+    columns = c("y2030_ERC", "y2030_UAAL")
     ) %>% 
 	tab_spanner(
-    label = "Total present value over 20 years (2020-2039)",
+    label = "Total present value over 20 years (2021-2040)",
     columns = c("ERC_PV", "EEC_PV")
     ) %>% 
 	cols_width(
@@ -434,9 +435,9 @@ tbl_summary_dlr <-
     locations = cells_row_groups()
 	 ) %>% 
  tab_footnote(
-    footnote = "All existing amortization bases in 2020 are expected to be paid off by 2039; present values are calculated with a discount rate of 6.625%.",
+    footnote = "All existing amortization bases in 2021 are expected to be paid off by 2040; present values are calculated with a discount rate of 6.625%.",
     locations = cells_column_spanners(
-     "Total present value over 20 years (2020-2039)"
+     "Total present value over 20 years (2021-2040)"
     )
  ) 
 # %>% 
@@ -536,11 +537,11 @@ df_fig <-
 
 df_fig_det <- 
   df_fig %>% 
-	filter(sim == 0, year <= 2050)
+	filter(sim == 0, year <= 2050, year >= 2021)
 
 df_fig_shock <- 
   df_fig %>% 
-	filter(sim == -2, year <= 2050)
+	filter(sim == -2, year <= 2050, year >= 2021)
 
 # df_fig_det %>% 
 # 	filter(str_detect(sim_name, "agg")) %>% 
@@ -558,7 +559,7 @@ fig_AL_det <-
 	geom_line() + 
 	geom_point() + 
 	coord_cartesian(ylim = c(0, 10000)) + 
-	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 10))) + 
+	scale_x_continuous(breaks = c(2021, seq(2025, 2100, 10))) + 
 	scale_y_continuous(breaks = c(seq(0, 10000, 1000))) + 
 	scale_color_manual(values = colors_manual) + 
 	scale_shape_manual(values = shapes_manual) + 
@@ -578,7 +579,7 @@ fig_FR_det <-
 	geom_point() + 
 	geom_hline(yintercept = 100, linetype = 2, color = "grey50") + 
 	coord_cartesian(ylim = c(50, 150)) + 
-	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_x_continuous(breaks = c(2021, seq(2025, 2100, 5))) + 
 	scale_y_continuous(breaks = c(seq(0, 200, 10))) + 
 	scale_color_manual(values = colors_manual) +
 	scale_shape_manual(values = shapes_manual) + 
@@ -596,7 +597,7 @@ fig_FR_det <-
 # 	geom_line() + 
 # 	geom_point() + 
 # 	#coord_cartesian(ylim = c(0, 150)) + 
-# 	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+# 	scale_x_continuous(breaks = c(2021, seq(2025, 2100, 5))) + 
 # 	#scale_y_continuous(breaks = c(seq(0, 200, 10))) + 
 # 	scale_color_manual(values =  colors_manual) +
 # 		scale_shape_manual(values = shapes_manual) + 
@@ -610,7 +611,7 @@ df_fig_det %>%
 	geom_line() + 
 	geom_point() + 
 	coord_cartesian(ylim = c(0, 120)) + 
-	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_x_continuous(breaks = c(2021, seq(2025, 2100, 5))) + 
 	scale_y_continuous(breaks = c(seq(0, 200, 10))) + 
 	scale_color_manual(values =  colors_manual) +
 	scale_shape_manual(values = shapes_manual) + 
@@ -627,7 +628,7 @@ df_fig_det %>%
 	geom_line() + 
 	geom_point() + 
 	coord_cartesian(ylim = c(0, 20)) + 
-	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_x_continuous(breaks = c(2021, seq(2025, 2100, 5))) + 
 	scale_y_continuous(breaks = c(seq(0, 200, 2))) + 
 	scale_color_manual(values =  colors_manual)+
 		scale_shape_manual(values = shapes_manual) + 
@@ -643,7 +644,7 @@ df_fig_det %>%
 	geom_line() + 
 	geom_point() + 
 	coord_cartesian(ylim = c(0, 45)) + 
-	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_x_continuous(breaks = c(2021, seq(2025, 2100, 5))) + 
 	scale_y_continuous(breaks = c(seq(0, 200, 5))) + 
 	scale_color_manual(values =  colors_manual) +
 		scale_shape_manual(values = shapes_manual) + 
@@ -663,7 +664,7 @@ fig_AL_shock <-
 	geom_line() + 
 	geom_point() + 
 	coord_cartesian(ylim = c(0, 10000)) + 
-	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_x_continuous(breaks = c(2021, seq(2025, 2100, 5))) + 
 	scale_y_continuous(breaks = c(seq(0, 10000, 1000))) + 
 	scale_color_manual(values =  colors_manual) + 
 		scale_shape_manual(values = shapes_manual) + 
@@ -679,7 +680,7 @@ fig_FR_shock <-
 	geom_point() + 
 	geom_hline(yintercept = 100, linetype = 2, color = "grey50") + 
 	coord_cartesian(ylim = c(50, 150)) + 
-	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_x_continuous(breaks = c(2021, seq(2025, 2100, 5))) + 
 	scale_y_continuous(breaks = c(seq(0, 200, 10))) + 
 	scale_color_manual(values = colors_manual) +
 		scale_shape_manual(values = shapes_manual) + 
@@ -697,7 +698,7 @@ df_fig_shock %>%
 	geom_line() + 
 	geom_point() + 
 	coord_cartesian(ylim = c(0, 120)) + 
-	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_x_continuous(breaks = c(2021, seq(2025, 2100, 5))) + 
 	scale_y_continuous(breaks = c(seq(0, 200, 10))) + 
 	scale_color_manual(values = colors_manual) +
 		scale_shape_manual(values = shapes_manual) + 
@@ -715,7 +716,7 @@ df_fig_shock %>%
 	geom_line() + 
 	geom_point() + 
 	coord_cartesian(ylim = c(0, 20)) + 
-	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_x_continuous(breaks = c(2021, seq(2025, 2100, 5))) + 
 	scale_y_continuous(breaks = c(seq(0, 200, 2))) + 
 	scale_color_manual(values = colors_manual)+
 	scale_shape_manual(values = shapes_manual) + 
@@ -731,7 +732,7 @@ df_fig_shock %>%
 	geom_line() + 
 	geom_point() + 
 	coord_cartesian(ylim = c(0, 45)) + 
-	scale_x_continuous(breaks = c(1999, seq(2000, 2100, 5))) + 
+	scale_x_continuous(breaks = c(2021, seq(2021, 2100, 5))) + 
 	scale_y_continuous(breaks = c(seq(0, 200, 5))) + 
 	scale_color_manual(values = colors_manual) +
 		scale_shape_manual(values = shapes_manual) + 
@@ -1262,8 +1263,8 @@ df_EECindiv_sum %<>%
 												         labels = df_policy.labels$labels))
 
 ## Colors
-colors_EEC <- c("grey30",  brewer_pal(type = "qual", palette = "Paired")(2)[2], 
-									         brewer_pal(type = "qual", palette = 1 )(1) )
+# colors_EEC <- c("grey30",  brewer_pal(type = "qual", palette = "Paired")(2)[2], 
+# 									         brewer_pal(type = "qual", palette = 1 )(1) )
 
 
 # overall EEC rate

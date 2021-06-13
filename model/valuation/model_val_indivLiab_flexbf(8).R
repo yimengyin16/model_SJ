@@ -1612,7 +1612,8 @@ var.names <- c(ALx.servRet.laca.method, NCx.servRet.laca.method, PVFNCx.servRet.
                ALx.death.method,        NCx.death.method,        PVFNCx.death.method,
                ALx.disbRet.method,      NCx.disbRet.method,      PVFNCx.disbRet.method,
                 
-							 "sx", 
+							 "sx",
+							 "fas",
 							 #"EEC",
 							 
 						   "PVFBx.servRet.laca", 
