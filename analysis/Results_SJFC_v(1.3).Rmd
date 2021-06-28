@@ -7,7 +7,7 @@ output:
   word_document:
     toc: yes
 editor_options:
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r loading results, include=FALSE}
@@ -1169,9 +1169,9 @@ fig_ben80 <-
 			  caption = caption_cohort)
 
 
-fig_ben60
+fig_ben60$data
 
-fig_ben80
+fig_ben80$data
 
 ```
 
@@ -1288,7 +1288,8 @@ fig_EECIndiv <-
 			  caption = caption_cohort)
 	
 
-#fig_EECIndiv
+fig_EECIndiv$data
+
 
 
 # # EEC in 2020 dollar

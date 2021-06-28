@@ -2242,7 +2242,7 @@ fig_EECIndiv <-
 			  caption = caption_cohort)
 	
 
-fig_EECIndiv
+fig_EECIndiv$data
 
 
 # # EEC in 2020 dollar
@@ -2306,7 +2306,7 @@ fig_EECIndiv
 
 
 # PV contributions: 2020-2039 (20 years)
-df_PVC_20y_disb <- get_PVC(df_results_disb, 2021:2030, dr = dr)
+df_PVC_20y_disb <- get_PVC(df_results_disb, 2021:2040, dr = dr)
 
 df_C1_disb <- 
   df_PVC_20y_disb %>% 
@@ -2482,7 +2482,7 @@ df_sumTbl_chg1_disb %>%
 		decimals = 1
 	) %>% 
 	tab_header(
-    title = md("Estimated impacts on contributions and UAAL of selected policy alternatives"),
+    title = md("Estimated impacts of lower service-related disability retirement rates on contributions"),
     subtitle = md("Dollar amount ($million) for the baseline policy; % change from baseline amount under each alternative policy")
     
   ) %>% 
@@ -2493,26 +2493,27 @@ df_sumTbl_chg1_disb %>%
     locations = cells_row_groups()
 	 ) %>% 
  tab_footnote(
-    footnote = "All existing amortization bases in 2021 are expected to be paid off by 2040; present values are calculated with a discount rate of 6.625%.",
+    footnote = "Present values are calculated with a discount rate of 6.625%.",
     locations = cells_column_spanners(
      "Total present value over 20 years (2021-2040)"
     )
- ) 
-# %>% 
-# tab_footnote(
-#     footnote = "Including POB debt service",
-#     locations = cells_body(
-#       columns = c(3,5),
-#       rows    = c(2,6)
-#     )
-#  ) %>% 
-# tab_footnote(
-#     footnote = "Including outstanding POB",
-#     locations = cells_body(
-#       columns = c(4,6),
-#       rows    = c(2,6)
-#     )
-#  )
+ ) %>% 
+ #  tab_footnote(
+ #    footnote = "Disability retirement rates shown in the table are weighted averages of the rates for fire fighters and police officers.",
+ #    locations = cells_column_spanners(
+ #     "Assumed probability of disability retirement"
+ #    )
+ # ) %>% 
+  tab_footnote(
+    footnote = "Disability retirement rates in this scenario are constructed based on the assumed disability rates used by CalPERS for state peace officers and fire fighters (POFF) and police and fire members at public agencies.",
+    locations = cells_body(
+      columns = c(1),
+      rows    = c(2)
+    )
+  )
+
+
+
 tbl_summary_chg_disb
 
 
@@ -2596,6 +2597,87 @@ tbl_summary_dlr_disb <-
 #     )
 #  )
 tbl_summary_dlr_disb
+
+
+
+# For the report
+tbl_summary_chg_disb2 <- 
+df_sumTbl_chg1_disb[1:2,] %>%  
+  gt %>% 
+	#fmt_markdown(columns = vars(sim_name)) %>% 
+	cols_label(
+		sim_name = "",
+		y2021_ERC = "Employer contribution",
+		y2030_ERC = "Employer contribution",
+		y2021_UAAL = "UAAL",
+		y2030_UAAL = "UAAL",
+		ERC_PV = "Employer contribution",
+		EEC_PV = "Employee contribution"
+	) %>% 
+	tab_spanner(
+    label = "2021",
+    columns = c("y2021_ERC", "y2021_UAAL")
+    ) %>% 
+	tab_spanner(
+    label = "2030",
+    columns = c("y2030_ERC", "y2030_UAAL")
+    ) %>% 
+	tab_spanner(
+    label = "Total present value over 20 years (2021-2040)",
+    columns = c("ERC_PV", "EEC_PV")
+    ) %>% 
+	cols_width(
+    "sim_name" ~ px(180),
+    vars(ERC_PV, EEC_PV) ~ px(120),
+    everything() ~ px(110)
+  ) %>% 
+	cols_align(
+    align = "left",
+    columns = vars(sim_name)
+  ) %>% 
+	
+	fmt_number(
+		rows = c(1),
+		columns = 2:8,
+		decimals = 0
+	) %>% 
+		fmt_percent(
+		rows = c(2),
+		columns = 2:8,
+		decimals = 1
+	) %>% 
+	tab_header(
+    title = md("Estimated impacts of lower service-related disability retirement rates on the police and fire plan"),
+    subtitle = md("Dollar amount ($million) for the baseline policy; % change from baseline amount under the alternative policy")
+    
+  ) %>% 
+	tab_style(
+    style = list(
+      cell_text(weight = "bold")
+      ),
+    locations = cells_row_groups()
+	 ) %>% 
+ tab_footnote(
+    footnote = "Present values are calculated with a discount rate of 6.625%.",
+    locations = cells_column_spanners(
+     "Total present value over 20 years (2021-2040)"
+    )
+ ) %>% 
+ #  tab_footnote(
+ #    footnote = "Disability retirement rates shown in the table are weighted averages of the rates for fire fighters and police officers.",
+ #    locations = cells_column_spanners(
+ #     "Assumed probability of disability retirement"
+ #    )
+ # ) %>% 
+  tab_footnote(
+    footnote = "Disability retirement rates in this scenario are constructed based on the assumed disability rates used by CalPERS for state peace officers and fire fighters (POFF) and police and fire members at public agencies.",
+    locations = cells_title(groups = "title")
+    )
+  
+
+# For the report
+tbl_summary_chg_disb2 
+
 
 ```
 
@@ -2794,8 +2876,144 @@ tbl_lowDisbRate
 
 ```
 
+
+```{r disbRatetbl2, include=FALSE}
+## Tables to show in the report and html, with adjustments to the impact
+#  the adjustments are calculated as:
+# 
+#  x0 - (x0 - x1) * fct1 * fct2
+#
+#  x0: value under "Lower disability rates",
+#  x1: value under "lower disability rates, all disb mort"
+#  fct1: 0.25  factor for the estimated share of service retirees with higher mortality
+#  fct2: 0.5   factor for the assumed mortality of the service retirees with higher mortality
+
+# Only show % changes of ERC_PV and EEC_PV 
+
+fct1 <- 0.25
+fct2 <- 0.5
+
+
+df_tbl_lowDisbRate <- 
+  df_sumTbl_chg1_disb %>% 
+  mutate(across(matches(c("ERC$","UAAL", "ERC_PV", "EEC_PV")), 
+  							~ ifelse(row_number() %in% c(1,3), .x, .x - (.x - .x[row_number() == 3]) * fct1 * fct2))) %>% 
+	select(sim_name, sim, ERC_PV, EEC_PV) %>% 
+	filter(row_number() %in% 1:2 )
+
+
+## Adding disability rates at age age 50 and 60
+
+df_disbRates <- 
+left_join(
+	readRDS(paste0(here::here(), "/model/tiers/tierData/tierData_pf.t1.disb.rds"))$decrements %>% 
+		filter(ea == 20) %>% 
+		select(age, qxd_low = qxd),
+	
+	readRDS(paste0(here::here(), "/model/tiers/tierData/tierData_pf.t1.rds"))$decrements %>% 
+		filter(ea == 20) %>% 
+		select(age, qxd_sj = qxd)
+	)
+
+df_disbRates.slc <- 
+  df_disbRates %>% 
+	filter(age %in% c(50, 60)) %>% 
+	gather(Var, value, -age) %>% 
+	spread(age, value) %>% 
+	mutate(Var = factor(Var, levels = c("qxd_sj", "qxd_low"))) %>% 
+	arrange(Var)
+	
+
+
+df_tbl_lowDisbRate %<>% 
+	mutate(qxd_50 = df_disbRates.slc[["50"]],
+				 qxd_60 = df_disbRates.slc[["60"]]
+				 ) %>% 
+	relocate(sim_name, sim, qxd_50, qxd_60)
+
+
+tbl_lowDisbRate <- 
+  df_tbl_lowDisbRate %>% 
+	ungroup %>% 
+	filter(sim == "Assumption met (constant 6.75% annual return)") %>% 
+	select(-sim) %>% 
+	gt %>% 
+	cols_label(
+		sim_name = "",
+		qxd_50= "age 50",
+		qxd_60= "age 60",
+		ERC_PV = "Employer contribution",
+		EEC_PV = "Employee contribution"
+	) %>% 
+	tab_spanner(
+    label = "Assumed probability of disability retirement",
+    columns = c("qxd_50", "qxd_60")
+    ) %>% 
+  tab_spanner(
+    label = "Total present value over 20 years",
+    columns = c("ERC_PV", "EEC_PV")
+    ) %>% 
+	cols_width(
+    "sim_name" ~ px(181),
+    vars(ERC_PV, EEC_PV) ~ px(120),
+    everything() ~ px(110)
+  ) %>% 
+	cols_align(
+    align = "left",
+    columns = vars(sim_name)
+  ) %>% 
+	fmt_number(
+		rows = c(1),
+		columns = 4:5,
+		decimals = 0
+	) %>% 
+	 fmt_percent(
+		rows = c(2),
+		columns = 4:5,
+		decimals = 1
+	) %>% 
+  fmt_percent(
+		rows = c(1:2),
+		columns = 2:3,
+		decimals = 1
+	) %>% 
+	tab_header(
+    title = md("Estimated impacts of lower service-related disability retirement rates on contributions "),
+    subtitle = md('Investment return scenario: Assumption met (constant 6.625% annual return)')
+  ) %>% 
+# 	tab_style(
+#     style = list(
+#       cell_text(weight = "bold")
+#       ),
+#     locations = cells_row_groups()
+# 	 ) %>% 
+  tab_footnote(
+    footnote = "Disability retirement rates shown in the table are weighted averages of the rates for fire fighters and police officers.",
+    locations = cells_column_spanners(
+     "Assumed probability of disability retirement"
+    )
+ ) %>% 
+  tab_footnote(
+    footnote = "Disability retirement rates in this scenario are constructed based on the assumed disability rates used by CalPERS for state peace officers and fire fighters (POFF) and police and fire members at public agencies.",
+    locations = cells_body(
+      columns = c(1),
+      rows    = c(2)
+    )
+ ) %>% 
+ tab_footnote(
+    footnote = "Present values are calculated with a discount rate of 6.625%.",
+    locations = cells_column_spanners(
+     "Total present value over 20 years"
+    )
+ ) 
+
+
+tbl_lowDisbRate 
+
+```
+
 ```{r}
-tbl_lowDisbRate
+tbl_summary_chg_disb2 
 ```
 
 
